@@ -23,6 +23,7 @@ export default function SignIn() {
     setIsLoading(true)
 
     try {
+      console.log('Attempting to sign in with email:', email)
       const response = await fetch('http://127.0.0.1:8000/users/token', {
         method: 'POST',
         headers: {
@@ -31,16 +32,31 @@ export default function SignIn() {
         body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
       })
 
+      console.log('Response status:', response.status)
+      const responseData = await response.json()
+      console.log('Response data:', responseData)
+
       if (response.ok) {
-        const data = await response.json()
-        // Use the login function from useAuth
-        login(data.access_token, data.user_id.toString())
-        // Redirect to dashboard
-        router.push('/dashboard')
+        if (responseData.access_token && responseData.refresh_token) {
+          console.log('Login successful, tokens received')
+          login({
+            accessToken: responseData.access_token,
+            refreshToken: responseData.refresh_token,
+          }, responseData.user_id ? responseData.user_id.toString() : '')
+          router.push('/dashboard')
+        } else {
+          console.error('Login response is missing expected tokens:', responseData)
+          toast({
+            title: "Login failed",
+            description: "The server response was invalid. Please try again.",
+            variant: "destructive",
+          })
+        }
       } else {
+        console.error('Login failed with status:', response.status, 'Response:', responseData)
         toast({
           title: "Login failed",
-          description: "Please check your credentials and try again.",
+          description: responseData.detail || "Please check your credentials and try again.",
           variant: "destructive",
         })
       }
