@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, ArrowLeft } from "lucide-react"
+import Image from 'next/image'
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 
 interface Bill {
   id: number;
@@ -30,7 +32,7 @@ interface PaymentHistory {
       id: number;
       amount: string;
       payment_date: string;
-      proof_image_url: string;
+      proof_image_url: string | null;
       status: string;
       verified_by: number | null;
     }[];
@@ -46,6 +48,7 @@ export default function LeaderManageBillsPage() {
   const { tribeID } = useParams()
   const { accessToken, isAuthenticated } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
 
   useEffect(() => {
     console.log('LeaderManageBillsPage mounted');
@@ -160,9 +163,46 @@ export default function LeaderManageBillsPage() {
     setOpenProofs(prev => ({ ...prev, [paymentId]: !prev[paymentId] }))
   }
 
+  const renderProofImage = (proofImageUrl: string | null) => {
+    if (!proofImageUrl) return null;
+
+    const fullImageUrl = `http://127.0.0.1:8000${proofImageUrl}`;
+
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <div className="cursor-pointer">
+            <Image
+              src={fullImageUrl}
+              alt="Payment Proof"
+              width={300}
+              height={300}
+              className="object-cover rounded-md"
+            />
+          </div>
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl">
+          <Image
+            src={fullImageUrl}
+            alt="Payment Proof"
+            width={800}
+            height={800}
+            className="object-contain"
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Manage Bills</h1>
+      <header className="flex justify-between items-center mb-6">
+        <Button variant="ghost" onClick={() => router.push(`/tribe/${tribeID}`)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Tribe
+        </Button>
+        <h1 className="text-2xl font-bold">Manage Bills</h1>
+      </header>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -233,9 +273,7 @@ export default function LeaderManageBillsPage() {
                               </CollapsibleTrigger>
                             )}
                             <CollapsibleContent>
-                              {payment.proof_image_url && (
-                                <img src={payment.proof_image_url} alt="Payment Proof" className="mt-2 max-w-xs" />
-                              )}
+                              {payment.proof_image_url && renderProofImage(payment.proof_image_url)}
                             </CollapsibleContent>
                             {payment.status !== 'VERIFIED' && (
                               <Button onClick={() => verifyPayment(payment.id)} className="mt-2">Verify Payment</Button>
