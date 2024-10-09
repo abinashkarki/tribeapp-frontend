@@ -7,6 +7,9 @@ import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 interface Bill {
   id: number;
@@ -39,6 +42,7 @@ export default function LeaderManageBillsPage() {
   const [selectedBill, setSelectedBill] = useState<number | null>(null)
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [openProofs, setOpenProofs] = useState<Record<number, boolean>>({})
   const { tribeID } = useParams()
   const { accessToken, isAuthenticated } = useAuth()
   const { toast } = useToast()
@@ -103,7 +107,7 @@ export default function LeaderManageBillsPage() {
       console.log('Received data:', data);
       setPaymentHistory(data);
     } catch (error) {
-      console.error('Error in fetchPaymentHistory:', error);
+      console.error('Error in fetchPaymentHistory:', error)
       if (error instanceof Error) {
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
@@ -152,6 +156,10 @@ export default function LeaderManageBillsPage() {
     }
   }
 
+  const toggleProof = (paymentId: number) => {
+    setOpenProofs(prev => ({ ...prev, [paymentId]: !prev[paymentId] }))
+  }
+
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">Manage Bills</h1>
@@ -172,7 +180,11 @@ export default function LeaderManageBillsPage() {
               </TableHeader>
               <TableBody>
                 {bills.map((bill) => (
-                  <TableRow key={bill.id} onClick={() => handleBillSelect(bill.id)} className="cursor-pointer">
+                  <TableRow 
+                    key={bill.id} 
+                    onClick={() => handleBillSelect(bill.id)} 
+                    className={`cursor-pointer ${selectedBill === bill.id ? 'bg-primary/10' : ''}`}
+                  >
                     <TableCell>{bill.title}</TableCell>
                     <TableCell>{bill.total_amount}</TableCell>
                     <TableCell>{new Date(bill.date).toLocaleDateString()}</TableCell>
@@ -192,23 +204,49 @@ export default function LeaderManageBillsPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Total Amount: {paymentHistory.total_amount}</h3>
                 {paymentHistory.members.map((member) => (
-                  <div key={member.user_id} className="mb-4">
-                    <h4 className="text-md font-semibold">{member.username}</h4>
+                  <Card key={member.user_id} className="mb-4 p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-md font-semibold">{member.username}</h4>
+                      {getPaymentStatusBadge(member)}
+                    </div>
                     <p>Amount Owed: {member.amount_owed}</p>
-                    {member.payments.map((payment) => (
-                      <div key={payment.id} className="ml-4 mt-2">
-                        <p>Amount: {payment.amount}</p>
-                        <p>Date: {new Date(payment.payment_date).toLocaleDateString()}</p>
-                        <p>Status: {payment.status}</p>
-                        {payment.proof_image_url && (
-                          <img src={payment.proof_image_url} alt="Payment Proof" className="mt-2 max-w-xs" />
-                        )}
-                        {payment.status !== 'VERIFIED' && (
-                          <Button onClick={() => verifyPayment(payment.id)} className="mt-2">Verify Payment</Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                    {member.payments.length > 0 ? (
+                      member.payments.map((payment) => (
+                        <Collapsible
+                          key={payment.id}
+                          open={openProofs[payment.id]}
+                          onOpenChange={() => toggleProof(payment.id)}
+                        >
+                          <div className="mt-2 p-2 bg-secondary/10 rounded">
+                            <p>Amount: {payment.amount}</p>
+                            <p>Date: {new Date(payment.payment_date).toLocaleDateString()}</p>
+                            <p>Status: {payment.status}</p>
+                            {payment.proof_image_url && (
+                              <CollapsibleTrigger asChild>
+                                <Button variant="outline" size="sm" className="mt-2">
+                                  {openProofs[payment.id] ? (
+                                    <>Hide Proof <ChevronUp className="h-4 w-4 ml-2" /></>
+                                  ) : (
+                                    <>View Proof <ChevronDown className="h-4 w-4 ml-2" /></>
+                                  )}
+                                </Button>
+                              </CollapsibleTrigger>
+                            )}
+                            <CollapsibleContent>
+                              {payment.proof_image_url && (
+                                <img src={payment.proof_image_url} alt="Payment Proof" className="mt-2 max-w-xs" />
+                              )}
+                            </CollapsibleContent>
+                            {payment.status !== 'VERIFIED' && (
+                              <Button onClick={() => verifyPayment(payment.id)} className="mt-2">Verify Payment</Button>
+                            )}
+                          </div>
+                        </Collapsible>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 italic">No payments made yet</p>
+                    )}
+                  </Card>
                 ))}
               </div>
             ) : (
@@ -220,3 +258,16 @@ export default function LeaderManageBillsPage() {
     </div>
   )
 }
+
+function getPaymentStatusBadge(member: PaymentHistory['members'][0]) {
+    const totalPaid = member.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+    const amountOwed = parseFloat(member.amount_owed);
+  
+    if (member.payments.length === 0) {
+      return <Badge variant="destructive">No payments yet</Badge>;
+    } else if (totalPaid < amountOwed) {
+      return <Badge variant="secondary">Partially paid</Badge>;
+    } else {
+      return <Badge variant="default">Settled</Badge>;
+    }
+  }

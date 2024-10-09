@@ -68,10 +68,10 @@ export default function ViewBillDetailsPage() {
 
       const billData: Bill = await billResponse.json()
 
-      // Handle image URL
-      if (billData.image_url && !billData.image_url.startsWith('http')) {
-        billData.image_url = `http://127.0.0.1:8000${billData.image_url}`;
-      }
+      // Remove this block:
+      // if (billData.image_url && !billData.image_url.startsWith('http')) {
+      //   billData.image_url = `http://127.0.0.1:8000${billData.image_url}`;
+      // }
 
       const splitsResponse = await fetch(`http://127.0.0.1:8000/bills/bills/${billID}/splits`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -158,21 +158,29 @@ export default function ViewBillDetailsPage() {
                   <DialogTrigger asChild>
                     <div className="cursor-pointer">
                       <Image
-                        src={bill.image_url}
+                        src={`http://127.0.0.1:8000${bill.image_url}`} // Prepend the base URL
                         alt="Bill"
                         width={300}
                         height={300}
                         className="object-cover rounded-md"
+                        onError={(e) => {
+                          console.error('Error loading image:', e);
+                          e.currentTarget.src = '/placeholder-image.jpg'; // Replace with a placeholder image path
+                        }}
                       />
                     </div>
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl">
                     <Image
-                      src={bill.image_url}
+                      src={`http://127.0.0.1:8000${bill.image_url}`} // Prepend the base URL
                       alt="Bill"
                       width={800}
                       height={800}
                       className="object-contain"
+                      onError={(e) => {
+                        console.error('Error loading image:', e);
+                        e.currentTarget.src = '/placeholder-image.jpg'; // Replace with a placeholder image path
+                      }}
                     />
                   </DialogContent>
                 </Dialog>
