@@ -163,6 +163,16 @@ export default function TribePage() {
     router.push(`/tribe/${tribeID}/view-bill-details/${billId}`)
   }
 
+  // New function to check if the current user is the tribe leader
+  const isUserTribeLeader = () => {
+    return tribe?.created_by === Number(userId);
+  };
+
+  // New function to handle navigation to the manage bills page
+  const handleManageBills = () => {
+    router.push(`/tribe/${tribeID}/leader-manage-bills`);
+  };
+
   if (isLoading) {
     return <div>Loading...</div>
   }
@@ -256,9 +266,11 @@ export default function TribePage() {
                       <Plus className="mr-2 h-4 w-4" /> Add New Bill
                     </Button>
                   </Link>
-                  <Button size="sm" variant="outline">
-                    Manage Bills
-                  </Button>
+                  {isUserTribeLeader() && (
+                    <Button size="sm" variant="outline" onClick={handleManageBills}>
+                      Manage Bills
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className="grid gap-4">
