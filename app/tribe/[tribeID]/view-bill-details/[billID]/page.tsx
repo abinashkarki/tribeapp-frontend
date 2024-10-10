@@ -3,42 +3,61 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { ArrowLeft, Calendar, DollarSign, FileText, Loader2, Receipt } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { useAuth } from '@/hooks/useAuth'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useToast } from "@/hooks/use-toast"
+import { useAuth } from '@/hooks/useAuth'
 
-interface BillSplit {
+interface Payment {
   id: number;
-  bill_id: number;
-  user_id: number;
   amount: string;
+  payment_date: string;
+  proof_image_url: string | null;
   status: string;
-  created_at: string;
-  updated_at: string;
+  verified_by: number | null;
+}
+
+interface MemberPayment {
+  user_id: number;
+  username: string;
+  amount_owed: string;
+  payments: Payment[];
 }
 
 interface Bill {
   id: number;
   title: string;
   description: string;
-  total_amount: number | string;  // Changed to allow both number and string
+  total_amount: string;
   date: string;
   image_url: string;
   created_at: string;
   updated_at: string;
-  splits: BillSplit[];
+  user_amount: string;
+  status: string;
+  previous_payment: string;
+  members: MemberPayment[];
 }
 
 export default function ViewBillDetailsPage() {
   const [bill, setBill] = useState<Bill | null>(null)
-  const [userSplit, setUserSplit] = useState<BillSplit | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
   const { accessToken, userId } = useAuth()
@@ -49,46 +68,42 @@ export default function ViewBillDetailsPage() {
 
   useEffect(() => {
     if (accessToken && billID) {
-      fetchBillDetailsAndSplits()
+      fetchBillDetailsAndPaymentHistory()
     }
   }, [billID, accessToken, userId])
 
-  const fetchBillDetailsAndSplits = async () => {
+  const fetchBillDetailsAndPaymentHistory = async () => {
     setIsLoading(true)
     try {
-      const billResponse = await fetch(`http://127.0.0.1:8000/bills/bills/${billID}`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      })
+      const [billResponse, paymentHistoryResponse] = await Promise.all([
+        fetch(`http://127.0.0.1:8000/bills/bills/${billID}`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        }),
+        fetch(`http://localhost:8000/bills/bills/${billID}/members-payment-history`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        })
+      ])
 
-      if (!billResponse.ok) {
-        const errorText = await billResponse.text()
-        console.error('Bill response error:', billResponse.status, errorText)
-        throw new Error(`Failed to fetch bill details: ${billResponse.status} ${errorText}`)
+      if (!billResponse.ok || !paymentHistoryResponse.ok) {
+        throw new Error('Failed to fetch bill details or payment history')
       }
 
-      const billData: Bill = await billResponse.json()
+      const billData = await billResponse.json()
+      const paymentHistoryData = await paymentHistoryResponse.json()
 
-      // Remove this block:
-      // if (billData.image_url && !billData.image_url.startsWith('http')) {
-      //   billData.image_url = `http://127.0.0.1:8000${billData.image_url}`;
-      // }
+      const userPayment = paymentHistoryData.members.find((member: MemberPayment) => member.user_id === Number(userId))
 
-      const splitsResponse = await fetch(`http://127.0.0.1:8000/bills/bills/${billID}/splits`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      })
-
-      if (!splitsResponse.ok) {
-        throw new Error('Failed to fetch bill splits')
+      const combinedBillData: Bill = {
+        ...billData,
+        user_amount: userPayment ? userPayment.amount_owed : '0',
+        status: userPayment ? (userPayment.payments.length > 0 ? 'PARTIALLY_PAID' : 'PENDING') : 'UNKNOWN',
+        previous_payment: userPayment ? userPayment.payments.reduce((sum: number, payment: Payment) => sum + parseFloat(payment.amount), 0).toFixed(2) : '0',
+        members: paymentHistoryData.members
       }
 
-      const splitsData: BillSplit[] = await splitsResponse.json()
-      billData.splits = splitsData
-
-      setBill(billData)
-      const userSplitData = splitsData.find(split => split.user_id === Number(userId))
-      setUserSplit(userSplitData || null)
+      setBill(combinedBillData)
     } catch (error) {
-      console.error('Error fetching bill details and splits:', error)
+      console.error('Error fetching bill details and payment history:', error)
       toast({
         title: "Error",
         description: "Failed to load bill details. Please try again later.",
@@ -99,16 +114,10 @@ export default function ViewBillDetailsPage() {
     }
   }
 
-  const formatAmount = (amount: any): string => {
-    if (typeof amount === 'number') {
-      return amount.toFixed(2);
-    } else if (typeof amount === 'string') {
-      const parsedAmount = parseFloat(amount);
-      return isNaN(parsedAmount) ? 'Invalid Amount' : parsedAmount.toFixed(2);
-    } else {
-      return 'Invalid Amount';
-    }
-  };
+  const formatAmount = (amount: string): string => {
+    const parsedAmount = parseFloat(amount)
+    return isNaN(parsedAmount) ? 'Invalid Amount' : parsedAmount.toFixed(2)
+  }
 
   if (isLoading) {
     return (
@@ -122,9 +131,11 @@ export default function ViewBillDetailsPage() {
     return <div>No bill found</div>
   }
 
+  const paymentProgress = (parseFloat(bill.previous_payment) / parseFloat(bill.user_amount)) * 100
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
+      <header className="bg-background/50 backdrop-blur-sm sticky top-0 z-10 border-b">
         <div className="container mx-auto px-4 py-4 flex items-center">
           <Button variant="ghost" size="icon" className="mr-4" onClick={() => router.back()}>
             <ArrowLeft className="h-6 w-6" />
@@ -134,76 +145,80 @@ export default function ViewBillDetailsPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>{bill.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-semibold">Description</h3>
-              <p>{bill.description}</p>
+        <Card className="overflow-hidden">
+          <div className="relative h-64 md:h-80 bg-primary/10">
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/50 to-background/90" />
+            <div className="absolute inset-x-0 bottom-0 p-6">
+              <h2 className="text-4xl font-bold text-foreground mb-2">{bill.title}</h2>
+              <p className="text-foreground/80">{bill.description}</p>
             </div>
-            <div>
-              <h3 className="font-semibold">Total Amount</h3>
-              <p>${formatAmount(bill.total_amount)}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">Date</h3>
-              <p>{new Date(bill.date).toLocaleDateString()}</p>
-            </div>
-            {bill.image_url && (
-              <div>
-                <h3 className="font-semibold">Bill Image</h3>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="cursor-pointer">
-                      <Image
-                        src={`http://127.0.0.1:8000${bill.image_url}`} // Prepend the base URL
-                        alt="Bill"
-                        width={300}
-                        height={300}
-                        className="object-cover rounded-md"
-                        onError={(e) => {
-                          console.error('Error loading image:', e);
-                          e.currentTarget.src = '/placeholder-image.jpg'; // Replace with a placeholder image path
-                        }}
-                      />
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-3xl">
-                    <Image
-                      src={`http://127.0.0.1:8000${bill.image_url}`} // Prepend the base URL
-                      alt="Bill"
-                      width={800}
-                      height={800}
-                      className="object-contain"
-                      onError={(e) => {
-                        console.error('Error loading image:', e);
-                        e.currentTarget.src = '/placeholder-image.jpg'; // Replace with a placeholder image path
-                      }}
-                    />
-                  </DialogContent>
-                </Dialog>
+          </div>
+          <CardContent className="p-6 pt-10 relative">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="absolute -top-8 right-6 bg-background rounded-full shadow-lg">
+                  <Receipt className="h-4 w-4 mr-2" />
+                  View Receipt
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[800px]">
+                <DialogHeader>
+                  <DialogTitle>Bill Receipt</DialogTitle>
+                  <DialogDescription>Full image of the receipt for {bill.title}</DialogDescription>
+                </DialogHeader>
+                <div className="mt-4">
+                  <p>Receipt image placeholder</p>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <DollarSign className="h-5 w-5 text-primary" />
+                  <p className="text-2xl font-semibold">${formatAmount(bill.total_amount)}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  <p>{new Date(bill.date).toLocaleDateString()}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <p className="text-sm text-muted-foreground">Bill ID: {bill.id}</p>
+                </div>
               </div>
-            )}
-            
-            {userSplit && (
-              <div>
-                <h3 className="font-semibold">Your Share</h3>
-                <p>${formatAmount(userSplit.amount)}</p>
-                <h3 className="font-semibold mt-2">Status</h3>
-                <p className={userSplit.status === 'PENDING' ? 'text-yellow-500' : 'text-green-500'}>
-                  {userSplit.status}
-                </p>
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Your Share</h3>
+                <div className="flex items-center justify-between">
+                  <p className="text-3xl font-bold text-primary">${formatAmount(bill.user_amount)}</p>
+                  <Badge variant={bill.status === 'PENDING' ? 'destructive' : 'default'} className="text-sm">
+                    {bill.status}
+                  </Badge>
+                </div>
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-sm text-muted-foreground">Payment Progress</p>
+                    {parseFloat(bill.previous_payment) > 0 && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-sm text-muted-foreground">
+                              Previous Payment: ${formatAmount(bill.previous_payment)}
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Total payments made so far</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                  <Progress value={paymentProgress} className="w-full" />
+                </div>
               </div>
-            )}
-
-            {userSplit && userSplit.status === 'PENDING' && (
-              <Button 
-                onClick={() => router.push(`/payments/confirmation/${userSplit.id}`)}
-                className="w-full"
-              >
-                Make Payment
+            </div>
+            {bill.status !== 'PAID' && (
+              <Button className="w-full mt-6" onClick={() => router.push(`/payments/confirmation/${bill.id}`)}>
+                Settle ${formatAmount((parseFloat(bill.user_amount) - parseFloat(bill.previous_payment)).toString())}
               </Button>
             )}
           </CardContent>

@@ -32,10 +32,19 @@ export default function BillUploadPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const { id: tribeId } = useParams()
+  const params = useParams();
+  const tribeId = params.tribeID;
+
+  console.log('Tribe ID:', tribeId); // Add this line to check the value
+
+  console.log('Params:', params);
+
   const { userId, accessToken } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
+
+  console.log('Access Token:', accessToken)
+  console.log('User ID:', userId)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -59,7 +68,8 @@ export default function BillUploadPage() {
       })
 
       if (!response.ok) {
-        throw new Error('File upload failed')
+        const errorText = await response.text()
+        throw new Error(`File upload failed: ${response.status} ${response.statusText}\n${errorText}`)
       }
 
       const result: OCRResult = await response.json()
@@ -73,7 +83,7 @@ export default function BillUploadPage() {
       console.error('Error uploading file:', error)
       toast({
         title: "Error",
-        description: "Failed to process bill. Please try again.",
+        description: `Failed to process bill: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       })
     } finally {
@@ -89,67 +99,101 @@ export default function BillUploadPage() {
     setAmount('')
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('handleSubmit called');
+
+    console.log('OCR Result:', ocrResult);
+    console.log('Title:', title);
+    console.log('Description:', description);
+    console.log('Amount:', amount);
+    console.log('Tribe ID:', tribeId);
+
     if (!ocrResult) {
+      console.log('No OCR result available');
       toast({
         title: "Error",
         description: "No OCR result available. Please process the bill first.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    if (title.trim() === '' || description.trim() === '' || !amount) {
+    if (title.trim() === '') {
+      console.log('Title is missing');
+    }
+    if (description.trim() === '') {
+      console.log('Description is missing');
+    }
+    if (!amount) {
+      console.log('Amount is missing');
+    }
+    if (!tribeId) {
+      console.log('Tribe ID is missing');
+    }
+
+    if (title.trim() === '' || description.trim() === '' || !amount || !tribeId) {
+      console.log('Missing required fields');
       toast({
         title: "Error",
-        description: "Please provide a title, description, and amount for the bill.",
+        description: "Please provide all required information for the bill.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
+    console.log('Preparing to submit bill data');
 
     const billData = {
-      tribe_id: Number(tribeId),
+      tribe_id: parseInt(tribeId as string, 10),
       title: title.trim(),
       description: description.trim(),
       total_amount: parseFloat(amount),
       date: new Date().toISOString().split('T')[0],
       created_by: Number(userId),
       image_url: ocrResult.image_url
-    }
+    };
+
+    console.log('Bill data:', billData);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/bills/', {
+      console.log('Sending request to backend');
+      const response = await fetch('http://localhost:8000/bills/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(billData),
-      })
+      });
+
+      console.log('Response received:', response.status);
 
       if (!response.ok) {
-        throw new Error('Failed to create bill')
+        const errorText = await response.text();
+        throw new Error(`Failed to create bill: ${response.status} ${response.statusText}\n${errorText}`);
       }
+
+      const responseData = await response.json();
+      console.log('Server response:', responseData);
 
       toast({
         title: "Success",
         description: "Bill created successfully!",
-      })
-      router.push(`/tribe/${tribeId}`)
+      });
+      router.push(`/tribe/${tribeId}`);
     } catch (error) {
-      console.error('Error creating bill:', error)
+      console.error('Error creating bill:', error);
       toast({
         title: "Error",
-        description: "Failed to create bill. Please try again.",
+        description: `Failed to create bill: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -232,7 +276,10 @@ export default function BillUploadPage() {
                       id="bill-title"
                       placeholder="Enter bill title"
                       value={title}
-                      onChange={(e) => setTitle(e.target.value)}
+                      onChange={(e) => {
+                        setTitle(e.target.value)
+                        console.log('Title updated:', e.target.value)
+                      }}
                       className="w-full"
                     />
                   </div>
@@ -242,7 +289,10 @@ export default function BillUploadPage() {
                       id="bill-description"
                       placeholder="Enter bill description"
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      onChange={(e) => {
+                        setDescription(e.target.value)
+                        console.log('Description updated:', e.target.value)
+                      }}
                       className="w-full"
                     />
                   </div>
@@ -254,17 +304,22 @@ export default function BillUploadPage() {
                       step="0.01"
                       placeholder="Enter bill amount"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={(e) => {
+                        setAmount(e.target.value)
+                        console.log('Amount updated:', e.target.value)
+                      }}
                       className="w-full"
                     />
                   </div>
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="w-full"
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit Bill'}
-                  </Button>
+                  <form onSubmit={handleSubmit}>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full"
+                    >
+                      {isSubmitting ? 'Submitting...' : 'Submit Bill'}
+                    </Button>
+                  </form>
                 </div>
               )}
             </div>

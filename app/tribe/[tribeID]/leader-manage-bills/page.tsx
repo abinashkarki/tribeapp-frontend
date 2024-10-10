@@ -45,22 +45,42 @@ export default function LeaderManageBillsPage() {
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [openProofs, setOpenProofs] = useState<Record<number, boolean>>({})
+  const [tribeName, setTribeName] = useState<string>("")
   const { tribeID } = useParams()
   const { accessToken, isAuthenticated } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
 
   useEffect(() => {
-    console.log('LeaderManageBillsPage mounted');
-    console.log('tribeID:', tribeID);
-    console.log('isAuthenticated:', isAuthenticated);
-    console.log('accessToken available:', !!accessToken);
-
     if (isAuthenticated && accessToken) {
       setIsLoading(false);
+      fetchTribeDetails();
       fetchBills();
     }
   }, [isAuthenticated, accessToken]);
+
+  const fetchTribeDetails = async () => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/tribes/tribes/${tribeID}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTribeName(data.name);
+      } else {
+        throw new Error('Failed to fetch tribe details');
+      }
+    } catch (error) {
+      console.error('Error fetching tribe details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load tribe details. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchBills = async () => {
     try {
@@ -196,12 +216,13 @@ export default function LeaderManageBillsPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <header className="flex justify-between items-center mb-6">
+      <header className="flex items-center justify-between mb-6">
         <Button variant="ghost" onClick={() => router.push(`/tribe/${tribeID}`)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Tribe
         </Button>
-        <h1 className="text-2xl font-bold">Manage Bills</h1>
+        <h1 className="text-2xl font-bold flex-grow text-center">{tribeName}</h1>
+        <div className="w-[100px]"></div> {/* This empty div balances the header */}
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
