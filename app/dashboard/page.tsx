@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Bell, LogOut, Plus, UserCircle, Users, Crown } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from "@/hooks/use-toast"
+import axiosInstance from '@/lib/axios'
 
 interface User {
   email: string;
@@ -27,7 +28,7 @@ interface Tribe {
 
 export default function Dashboard() {
   const [tribes, setTribes] = useState<Tribe[]>([])
-  const { isAuthenticated, isLoading, logout, accessToken, userId } = useAuth()
+  const { isAuthenticated, isLoading, logout, userId } = useAuth()
 
   const router = useRouter()
   const { toast } = useToast()
@@ -41,42 +42,32 @@ export default function Dashboard() {
   }, [isLoading, isAuthenticated, router])
 
   const fetchUserDetails = async (userId: number): Promise<User> => {
-    const response = await fetch(`http://127.0.0.1:8000/users/users/${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    })
-    if (!response.ok) {
-      throw new Error('Failed to fetch user details')
+    try {
+      const response = await axiosInstance.get(`/users/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      throw error;
     }
-    return await response.json()
   }
 
   const fetchTribes = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/tribes/users/${userId}/tribes`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
+      const response = await axiosInstance.get(`/tribes/users/${userId}/tribes`);
+      const data: Tribe[] = response.data;
+      
+      // Fetch leader details for each tribe
+      const tribesWithLeaders = await Promise.all(data.map(async (tribe) => {
+        try {
+          const leaderDetails = await fetchUserDetails(tribe.created_by)
+          return { ...tribe, leader: leaderDetails }
+        } catch (error) {
+          console.error(`Failed to fetch leader details for tribe ${tribe.id}:`, error)
+          return tribe
         }
-      })
-      if (response.ok) {
-        const data: Tribe[] = await response.json()
-        
-        // Fetch leader details for each tribe
-        const tribesWithLeaders = await Promise.all(data.map(async (tribe) => {
-          try {
-            const leaderDetails = await fetchUserDetails(tribe.created_by)
-            return { ...tribe, leader: leaderDetails }
-          } catch (error) {
-            console.error(`Failed to fetch leader details for tribe ${tribe.id}:`, error)
-            return tribe
-          }
-        }))
+      }))
 
-        setTribes(tribesWithLeaders)
-      } else {
-        throw new Error('Failed to fetch tribes')
-      }
+      setTribes(tribesWithLeaders)
     } catch (error) {
       console.error('Error fetching tribes:', error)
       toast({

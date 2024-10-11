@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from '@/hooks/useAuth'
 import { ArrowLeft, Upload, CheckCircle, Clock, HelpCircle, AlertCircle, Loader2 } from 'lucide-react'
+import axiosInstance from '@/lib/axios'
 
 interface BillSplit {
   id: number;
@@ -79,13 +80,8 @@ export default function PaymentConfirmationPage() {
   const fetchUserSplit = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(`http://localhost:8000/bills/bills/${billId}/my-split`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-      if (!response.ok) throw new Error('Failed to fetch user split')
-      const splitData: BillSplit = await response.json()
+      const response = await axiosInstance.get(`/bills/bills/${billId}/my-split`);
+      const splitData: BillSplit = response.data;
       console.log('Fetching split for bill ID:', billId);
       console.log('Received split data:', splitData);
       setUserSplit(splitData)
@@ -109,22 +105,17 @@ export default function PaymentConfirmationPage() {
 
     try {
       console.log(`Fetching payment history for bill split ID: ${userSplit.id}`)
-      const response = await fetch(`http://localhost:8000/bills/payments/${userSplit.id}/history`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-      if (!response.ok) throw new Error('Failed to fetch payment history')
-      const historyData: PaymentHistory[] = await response.json()
+      const response = await axiosInstance.get(`/bills/payments/${userSplit.id}/history`);
+      const historyData: PaymentHistory[] = response.data;
       console.log('Received payment history:', historyData)
       setPaymentHistory(historyData)
     } catch (error) {
-      console.error('Error fetching payment history:', error)
+      console.error('Error in fetchPaymentHistory:', error)
       toast({
         title: "Error",
         description: "Failed to load payment history. Please try again later.",
         variant: "destructive",
-      })
+      });
     }
   }
 
@@ -150,17 +141,13 @@ export default function PaymentConfirmationPage() {
     formData.append('file', selectedFile)
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/payments/ocr/', {
-        method: 'POST',
+      const response = await axiosInstance.post('/api/payments/ocr/', formData, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: formData
-      })
+          'Content-Type': 'multipart/form-data'
+        }
+      });
 
-      if (!response.ok) throw new Error('Failed to upload payment proof')
-
-      const result = await response.json()
+      const result = response.data;
       console.log('OCR Result:', result)
 
       setPaymentDetails({
@@ -193,21 +180,12 @@ export default function PaymentConfirmationPage() {
     setConfirmationError(null)
 
     try {
-      const response = await fetch('http://localhost:8000/bills/payments/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          bill_split_id: userSplit.id,
-          amount: paymentDetails.payment_amount,
-          payment_date: new Date().toISOString().split('T')[0], // Today's date
-          proof_image_url: paymentDetails.image_url
-        })
-      })
-
-      if (!response.ok) throw new Error('Failed to confirm payment')
+      const response = await axiosInstance.post('/bills/payments/', {
+        bill_split_id: userSplit.id,
+        amount: paymentDetails.payment_amount,
+        payment_date: new Date().toISOString().split('T')[0], // Today's date
+        proof_image_url: paymentDetails.image_url
+      });
 
       toast({
         title: "Success",

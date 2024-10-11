@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/tooltip"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from '@/hooks/useAuth'
+import axiosInstance from '@/lib/axios'
 
 interface Payment {
   id: number;
@@ -66,6 +67,8 @@ export default function ViewBillDetailsPage() {
   const tribeID = params.tribeID
   const billID = params.billID
 
+  const [fullImageUrl, setFullImageUrl] = useState<string | null>(null)
+
   useEffect(() => {
     if (accessToken && billID) {
       fetchBillDetailsAndPaymentHistory()
@@ -76,32 +79,39 @@ export default function ViewBillDetailsPage() {
     setIsLoading(true)
     try {
       const [billResponse, paymentHistoryResponse] = await Promise.all([
-        fetch(`http://127.0.0.1:8000/bills/bills/${billID}`, {
-          headers: { 'Authorization': `Bearer ${accessToken}` }
-        }),
-        fetch(`http://localhost:8000/bills/bills/${billID}/members-payment-history`, {
-          headers: { 'Authorization': `Bearer ${accessToken}` }
-        })
-      ])
+        axiosInstance.get(`/bills/bills/${billID}`),
+        axiosInstance.get(`/bills/bills/${billID}/members-payment-history`)
+      ]);
 
-      if (!billResponse.ok || !paymentHistoryResponse.ok) {
-        throw new Error('Failed to fetch bill details or payment history')
-      }
-
-      const billData = await billResponse.json()
-      const paymentHistoryData = await paymentHistoryResponse.json()
+      const billData = billResponse.data;
+      const paymentHistoryData = paymentHistoryResponse.data;
 
       const userPayment = paymentHistoryData.members.find((member: MemberPayment) => member.user_id === Number(userId))
 
       const combinedBillData: Bill = {
         ...billData,
         user_amount: userPayment ? userPayment.amount_owed : '0',
-        status: userPayment ? (userPayment.payments.length > 0 ? 'PARTIALLY_PAID' : 'PENDING') : 'UNKNOWN',
-        previous_payment: userPayment ? userPayment.payments.reduce((sum: number, payment: Payment) => sum + parseFloat(payment.amount), 0).toFixed(2) : '0',
+        status: userPayment
+          ? (() => {
+              const totalPaid = userPayment.payments.reduce((sum: number, payment: Payment) => sum + parseFloat(payment.amount), 0);
+              const amountOwed = parseFloat(userPayment.amount_owed);
+              if (totalPaid >= amountOwed) {
+                return 'SETTLED';
+              } else if (totalPaid > 0) {
+                return 'PARTIALLY_PAID';
+              } else {
+                return 'PENDING';
+              }
+            })()
+          : 'UNKNOWN',
+        previous_payment: userPayment
+          ? userPayment.payments.reduce((sum: number, payment: Payment) => sum + parseFloat(payment.amount), 0).toFixed(2)
+          : '0',
         members: paymentHistoryData.members
       }
 
       setBill(combinedBillData)
+      setFullImageUrl(combinedBillData.image_url ? `http://127.0.0.1:8000${combinedBillData.image_url}` : null)
     } catch (error) {
       console.error('Error fetching bill details and payment history:', error)
       toast({
@@ -167,7 +177,17 @@ export default function ViewBillDetailsPage() {
                   <DialogDescription>Full image of the receipt for {bill.title}</DialogDescription>
                 </DialogHeader>
                 <div className="mt-4">
-                  <p>Receipt image placeholder</p>
+                  {fullImageUrl ? (
+                    <Image
+                      src={fullImageUrl}
+                      alt={`Receipt for ${bill.title}`}
+                      width={800}
+                      height={800}
+                      className="object-contain"
+                    />
+                  ) : (
+                    <p>No receipt image available</p>
+                  )}
                 </div>
               </DialogContent>
             </Dialog>

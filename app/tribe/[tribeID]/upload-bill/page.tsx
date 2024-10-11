@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from "@/hooks/use-toast"
+import axiosInstance from '@/lib/axios'
 
 interface OCRResult {
   items: Array<{ name: string; price: number }>;
@@ -62,17 +63,13 @@ export default function BillUploadPage() {
     formData.append('file', file)
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/ocr/', {
-        method: 'POST',
-        body: formData,
-      })
+      const response = await axiosInstance.post('/api/ocr/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`File upload failed: ${response.status} ${response.statusText}\n${errorText}`)
-      }
-
-      const result: OCRResult = await response.json()
+      const result: OCRResult = response.data;
       setOcrResult(result)
       setAmount(result.total.toFixed(2))
       toast({
@@ -152,31 +149,14 @@ export default function BillUploadPage() {
       total_amount: parseFloat(amount),
       date: new Date().toISOString().split('T')[0],
       created_by: Number(userId),
-      image_url: ocrResult.image_url
+      image_url: ocrResult?.image_url
     };
 
     console.log('Bill data:', billData);
 
     try {
-      console.log('Sending request to backend');
-      const response = await fetch('http://localhost:8000/bills/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(billData),
-      });
-
-      console.log('Response received:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to create bill: ${response.status} ${response.statusText}\n${errorText}`);
-      }
-
-      const responseData = await response.json();
-      console.log('Server response:', responseData);
+      const response = await axiosInstance.post('/bills/', billData);
+      console.log('Server response:', response.data);
 
       toast({
         title: "Success",

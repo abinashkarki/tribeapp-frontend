@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { ArrowLeft, Copy, Users, UserPlus } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import axiosInstance from '@/lib/axios'
 
 export default function CreateJoinTribePage() {
   const [activeTab, setActiveTab] = useState("create")
@@ -35,35 +36,32 @@ export default function CreateJoinTribePage() {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/tribes/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: tribeName,
-          description: tribeDescription,
-        }),
-      })
+      const response = await axiosInstance.post('/tribes/', {
+        name: tribeName,
+        description: tribeDescription,
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to create tribe')
-      }
-
-      const data = await response.json()
-      setCreatedTribeCode(data.code)
+      const data = response.data;
+      setCreatedTribeCode(data.code);
       toast({
         title: "Success",
         description: "Your tribe has been created successfully!",
-      })
+      });
+
+      // Reset form fields
+      setTribeName('');
+      setTribeDescription('');
+
+      // Switch to the "join" tab to encourage sharing
+      setActiveTab("join");
+
     } catch (error) {
-      console.error('Error creating tribe:', error)
+      console.error('Error creating tribe:', error);
       toast({
         title: "Error",
         description: "Failed to create tribe. Please try again later.",
         variant: "destructive",
-      })
+      });
     }
   }
 
@@ -79,34 +77,27 @@ export default function CreateJoinTribePage() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/tribes/join', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code: tribeCode }),
-      })
+      const response = await axiosInstance.post('/tribes/join', { code: tribeCode });
 
-      if (!response.ok) {
-        throw new Error('Failed to join tribe')
+      if (response.status === 200) {
+        const data = response.data;
+        toast({
+          title: "Success",
+          description: `You've successfully joined the tribe: ${data.name}`,
+        });
+
+        // Redirect to the newly joined tribe's page
+        router.push(`/tribe/${data.id}`);
+      } else {
+        throw new Error('Failed to join tribe');
       }
-
-      const data = await response.json()
-      toast({
-        title: "Success",
-        description: `You've successfully joined the tribe: ${data.name}`,
-      })
-
-      // Redirect to the newly joined tribe's page
-      router.push(`/tribe/${data.id}`)
     } catch (error) {
-      console.error('Error joining tribe:', error)
+      console.error('Error joining tribe:', error);
       toast({
         title: "Error",
         description: "Failed to join tribe. Please check the code and try again.",
         variant: "destructive",
-      })
+      });
     }
   }
 

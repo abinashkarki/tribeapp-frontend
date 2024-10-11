@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from '@/hooks/useAuth'  // Add this import
+import { useAuth } from '@/hooks/useAuth'
+import axiosInstance from '@/lib/axios'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -16,47 +17,34 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
-  const { login } = useAuth()  // Add this line to use the login function from useAuth
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      console.log('Attempting to sign in with email:', email)
-      const response = await fetch('http://127.0.0.1:8000/users/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-      })
-
-      console.log('Response status:', response.status)
-      const responseData = await response.json()
-      console.log('Response data:', responseData)
-
-      if (response.ok) {
-        if (responseData.access_token && responseData.refresh_token) {
-          console.log('Login successful, tokens received')
-          login({
-            accessToken: responseData.access_token,
-            refreshToken: responseData.refresh_token,
-          }, responseData.user_id ? responseData.user_id.toString() : '')
-          router.push('/dashboard')
-        } else {
-          console.error('Login response is missing expected tokens:', responseData)
-          toast({
-            title: "Login failed",
-            description: "The server response was invalid. Please try again.",
-            variant: "destructive",
-          })
+      const response = await axiosInstance.post('/users/token', 
+        `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
         }
+      );
+
+      const responseData = response.data;
+
+      if (responseData.access_token && responseData.refresh_token) {
+        login({
+          accessToken: responseData.access_token,
+          refreshToken: responseData.refresh_token,
+        }, responseData.user_id ? responseData.user_id.toString() : '')
+        router.push('/dashboard')
       } else {
-        console.error('Login failed with status:', response.status, 'Response:', responseData)
         toast({
           title: "Login failed",
-          description: responseData.detail || "Please check your credentials and try again.",
+          description: "The server response was invalid. Please try again.",
           variant: "destructive",
         })
       }

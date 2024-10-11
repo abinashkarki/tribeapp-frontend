@@ -24,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import axiosInstance from '@/lib/axios'
 
 interface BillSplit {
   id: number;
@@ -79,20 +80,10 @@ export default function TribePage() {
 
   const fetchTribeDetails = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/tribes/tribes/${tribeID}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-      if (response.ok) {
-        const data: Tribe = await response.json();
-        console.log('Tribe details:', data); // Log the response data
-
-        setTribeName(data.name);
-        setTribe(data);
-      } else {
-        throw new Error('Failed to fetch tribe details');
-      }
+      const response = await axiosInstance.get(`/tribes/tribes/${tribeID}`);
+      const data: Tribe = response.data;
+      setTribeName(data.name);
+      setTribe(data);
     } catch (error) {
       console.error('Error fetching tribe details:', error);
       toast({
@@ -105,31 +96,18 @@ export default function TribePage() {
 
   const fetchBills = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/tribes/tribes/${tribeID}/bills`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-      if (response.ok) {
-        const data: Bill[] = await response.json();
-        const billsWithSplits = await Promise.all(data.map(async (bill) => {
-          const splitsResponse = await fetch(`http://127.0.0.1:8000/tribes/bills/${bill.id}/splits`, {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`
-            }
-          });
-          if (splitsResponse.ok) {
-            const splits: BillSplit[] = await splitsResponse.json();
-            console.log(`Splits for bill ${bill.id}:`, splits); // Log the splits data
-            return { ...bill, splits };
-          }
-          return bill;
-        }));
-        setBills(billsWithSplits);
-        console.log('All bills with splits:', billsWithSplits); // Log all bills with their splits
-      } else {
-        throw new Error('Failed to fetch bills');
-      }
+      const response = await axiosInstance.get(`/tribes/tribes/${tribeID}/bills`);
+      const data: Bill[] = response.data;
+      const billsWithSplits = await Promise.all(data.map(async (bill) => {
+        const splitsResponse = await axiosInstance.get(`/tribes/bills/${bill.id}/splits`);
+        const splits: BillSplit[] = splitsResponse.data;
+        return { ...bill, splits };
+      }));
+      // Sort bills by created_at in descending order
+      const sortedBills = billsWithSplits.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setBills(sortedBills);
     } catch (error) {
       console.error('Error fetching bills:', error);
       toast({
@@ -260,14 +238,14 @@ export default function TribePage() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">{tribeName ? `${tribeName} Bills` : 'Bills'}</h2>
-                <div className="space-x-2">
+                <div className="flex space-x-2">
                   <Link href={`/tribe/${tribeID}/upload-bill`}>
-                    <Button size="sm">
+                    <Button>
                       <Plus className="mr-2 h-4 w-4" /> Add New Bill
                     </Button>
                   </Link>
                   {isUserTribeLeader() && (
-                    <Button size="sm" variant="outline" onClick={handleManageBills}>
+                    <Button variant="outline" onClick={handleManageBills}>
                       Manage Bills
                     </Button>
                   )}

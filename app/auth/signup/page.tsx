@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
+import axiosInstance from '@/lib/axios'
 
 export default function SignUp() {
   const [email, setEmail] = useState('')
@@ -22,39 +23,33 @@ export default function SignUp() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/users/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, username, password }),
-      })
+      const response = await axiosInstance.post('/users/', { email, username, password });
 
-      if (response.ok) {
-        const data = await response.json()
+      if (response.status === 201) {
+        const data = response.data;
         toast({
           title: "Account created",
           description: "Your account has been successfully created. Please sign in.",
           variant: "default",
-        })
-        router.push('/auth/signin')
+        });
+        router.push('/auth/signin');
       } else {
-        const errorData = await response.json()
+        const errorData = response.data;
         toast({
           title: "Sign up failed",
           description: errorData.detail || "Please check your information and try again.",
           variant: "destructive",
-        })
+        });
       }
     } catch (error) {
-      console.error('Sign up error:', error)
+      console.error('Sign up error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again later.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 

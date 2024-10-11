@@ -12,6 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp, ArrowLeft } from "lucide-react"
 import Image from 'next/image'
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import axiosInstance from '@/lib/axios'
 
 interface Bill {
   id: number;
@@ -61,13 +62,9 @@ export default function LeaderManageBillsPage() {
 
   const fetchTribeDetails = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/tribes/tribes/${tribeID}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
+      const response = await axiosInstance.get(`/tribes/tribes/${tribeID}`);
+      if (response.status === 200) {
+        const data = await response.data;
         setTribeName(data.name);
       } else {
         throw new Error('Failed to fetch tribe details');
@@ -84,53 +81,43 @@ export default function LeaderManageBillsPage() {
 
   const fetchBills = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/tribes/tribes/${tribeID}/bills`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setBills(data)
+      const response = await axiosInstance.get(`/tribes/tribes/${tribeID}/bills`);
+      if (response.status === 200) {
+        const data = await response.data;
+        setBills(data);
       } else {
-        throw new Error('Failed to fetch bills')
+        throw new Error('Failed to fetch bills');
       }
     } catch (error) {
-      console.error('Error fetching bills:', error)
+      console.error('Error fetching bills:', error);
       toast({
         title: "Error",
         description: "Failed to load bills. Please try again later.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const fetchPaymentHistory = async (billId: number) => {
     try {
       console.log(`Attempting to fetch payment history for bill ${billId}`);
-      console.log('Access Token:', accessToken);
 
-      const response = await fetch(`http://localhost:8000/bills/bills/${billId}/members-payment-history`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axiosInstance.get(`/bills/bills/${billId}/members-payment-history`);
 
       console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('Response headers:', Object.fromEntries(Object.entries(response.headers)));
 
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (response.status !== 200) {
+        const errorText = await response.data;
         console.error('Error response body:', errorText);
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
-      const data = await response.json();
+      const data = await response.data;
       console.log('Received data:', data);
       setPaymentHistory(data);
     } catch (error) {
-      console.error('Error in fetchPaymentHistory:', error)
+      console.error('Error in fetchPaymentHistory:', error);
       if (error instanceof Error) {
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
@@ -143,6 +130,28 @@ export default function LeaderManageBillsPage() {
     }
   };
 
+  const verifyPayment = async (paymentId: number) => {
+    try {
+      const response = await axiosInstance.post(`bills/payments/${paymentId}/verify`);
+      if (response.status === 200) {
+        toast({
+          title: "Success",
+          description: "Payment verified successfully.",
+        });
+        if (selectedBill) fetchPaymentHistory(selectedBill);
+      } else {
+        throw new Error('Failed to verify payment');
+      }
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to verify payment. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -150,33 +159,6 @@ export default function LeaderManageBillsPage() {
   const handleBillSelect = (billId: number) => {
     setSelectedBill(billId)
     fetchPaymentHistory(billId)
-  }
-
-  const verifyPayment = async (paymentId: number) => {
-    try {
-      const response = await fetch(`http://localhost:8000/payments/${paymentId}/verify`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Payment verified successfully.",
-        })
-        if (selectedBill) fetchPaymentHistory(selectedBill)
-      } else {
-        throw new Error('Failed to verify payment')
-      }
-    } catch (error) {
-      console.error('Error verifying payment:', error)
-      toast({
-        title: "Error",
-        description: "Failed to verify payment. Please try again later.",
-        variant: "destructive",
-      })
-    }
   }
 
   const toggleProof = (paymentId: number) => {

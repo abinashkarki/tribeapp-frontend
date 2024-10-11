@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import axiosInstance from '@/lib/axios';
 
 interface AuthTokens {
   accessToken: string;
@@ -15,7 +16,6 @@ export function useAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if the user is authenticated by verifying the tokens
     const storedAccessToken = localStorage.getItem('accessToken');
     const storedRefreshToken = localStorage.getItem('refreshToken');
     const storedUserId = localStorage.getItem('userId');
@@ -40,23 +40,10 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      // Call the logout endpoint
-      const response = await fetch('http://127.0.0.1:8000/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
+      await axiosInstance.post('/logout', { refresh_token: refreshToken });
     } catch (error) {
       console.error('Error during logout:', error);
     } finally {
-      // Clear tokens and user data regardless of logout API success
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userId');
@@ -70,22 +57,11 @@ export function useAuth() {
 
   const refreshAccessToken = async (): Promise<string | null> => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAccessToken(data.access_token);
-        localStorage.setItem('accessToken', data.access_token);
-        return data.access_token;
-      } else {
-        throw new Error('Token refresh failed');
-      }
+      const response = await axiosInstance.post('/refresh', { refresh_token: refreshToken });
+      const newAccessToken = response.data.access_token;
+      setAccessToken(newAccessToken);
+      localStorage.setItem('accessToken', newAccessToken);
+      return newAccessToken;
     } catch (error) {
       console.error('Error refreshing token:', error);
       logout();
@@ -94,4 +70,27 @@ export function useAuth() {
   };
 
   return { isAuthenticated, isLoading, login, logout, accessToken, refreshAccessToken, userId };
+}
+
+// Remove this line
+// export const refreshAccessToken = useAuth().refreshAccessToken;
+
+// Instead, create a standalone function that doesn't rely on hooks
+export async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) return null;
+
+  try {
+    const response = await axiosInstance.post('/refresh', { refresh_token: refreshToken });
+    const newAccessToken = response.data.access_token;
+    localStorage.setItem('accessToken', newAccessToken);
+    return newAccessToken;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    // Clear local storage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
+    return null;
+  }
 }
