@@ -13,6 +13,7 @@ import { ChevronDown, ChevronUp, ArrowLeft } from "lucide-react"
 import Image from 'next/image'
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import axiosInstance from '@/lib/axios'
+import Link from 'next/link'
 
 interface Bill {
   id: number;
@@ -240,7 +241,12 @@ export default function LeaderManageBillsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Payment History</CardTitle>
+            <CardTitle className="flex justify-between items-center">
+              <span>Payment History</span>
+              <Link href={`/tribe/${tribeID}/leader-manage-bills/set-splits/${selectedBill}`} passHref>
+                <Button variant="outline" disabled={!selectedBill}>Manage Splits</Button>
+              </Link>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {paymentHistory ? (
