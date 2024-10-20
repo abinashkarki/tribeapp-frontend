@@ -25,6 +25,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import axiosInstance from '@/lib/axios'
+import { withAuth } from '@/components/ProtectedRoute'
 
 interface BillSplit {
   id: number;
@@ -58,7 +59,7 @@ interface Tribe {
   updated_at: string;
 }
 
-export default function TribePage() {
+export default withAuth(function TribePage() {
   const [bills, setBills] = useState<Bill[]>([])
   const [tribeName, setTribeName] = useState<string>("")
   const [activeTab, setActiveTab] = useState("bills")
@@ -232,7 +233,7 @@ export default function TribePage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="bills">Bills</TabsTrigger>
-            <TabsTrigger value="chat">Chat</TabsTrigger>
+            {/* <TabsTrigger value="chat">Chat</TabsTrigger> */}
           </TabsList>
           <TabsContent value="bills">
             <div className="space-y-6">
@@ -359,4 +360,4 @@ export default function TribePage() {
       </main>
     </div>
   )
-}
+})

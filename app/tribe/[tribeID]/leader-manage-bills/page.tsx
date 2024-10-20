@@ -14,6 +14,7 @@ import Image from 'next/image'
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import axiosInstance from '@/lib/axios'
 import Link from 'next/link'
+import { withAuth } from '@/components/ProtectedRoute'
 
 interface Bill {
   id: number;
@@ -41,7 +42,7 @@ interface PaymentHistory {
   }[];
 }
 
-export default function LeaderManageBillsPage() {
+export default withAuth(function LeaderManageBillsPage() {
   const [bills, setBills] = useState<Bill[]>([])
   const [selectedBill, setSelectedBill] = useState<number | null>(null)
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory | null>(null)
@@ -197,6 +198,19 @@ export default function LeaderManageBillsPage() {
     );
   };
 
+  function getPaymentStatusBadge(member: PaymentHistory['members'][0]) {
+    const totalPaid = member.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+    const amountOwed = parseFloat(member.amount_owed);
+  
+    if (member.payments.length === 0) {
+      return <Badge variant="destructive">No payments yet</Badge>;
+    } else if (totalPaid < amountOwed) {
+      return <Badge variant="secondary">Partially paid</Badge>;
+    } else {
+      return <Badge variant="default">Settled</Badge>;
+    }
+  }
+
   return (
     <div className="container mx-auto py-6">
       <header className="flex items-center justify-between mb-6">
@@ -304,17 +318,4 @@ export default function LeaderManageBillsPage() {
       </div>
     </div>
   )
-}
-
-function getPaymentStatusBadge(member: PaymentHistory['members'][0]) {
-    const totalPaid = member.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
-    const amountOwed = parseFloat(member.amount_owed);
-  
-    if (member.payments.length === 0) {
-      return <Badge variant="destructive">No payments yet</Badge>;
-    } else if (totalPaid < amountOwed) {
-      return <Badge variant="secondary">Partially paid</Badge>;
-    } else {
-      return <Badge variant="default">Settled</Badge>;
-    }
-  }
+})

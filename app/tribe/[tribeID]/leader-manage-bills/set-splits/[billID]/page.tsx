@@ -239,7 +239,7 @@ export default function BillSplitterPage({ params }: { params: { tribeID: string
               <Label>Split Method</Label>
               <RadioGroup 
                 value={splitMethod} 
-                onValueChange={(value) => setSplitMethod(value as SplitMethod)}
+                onValueChange={(value: string) => setSplitMethod(value as SplitMethod)}
                 className="flex space-x-4 mt-2"
               >
                 <div className="flex items-center space-x-2">

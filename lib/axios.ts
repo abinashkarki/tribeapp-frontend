@@ -1,7 +1,12 @@
-import axios from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { refreshAccessToken } from '@/hooks/useAuth';
 
-const DEBUG = true;
+const DEBUG = process.env.NODE_ENV === 'development';
+
+// Define a custom type that extends InternalAxiosRequestConfig
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 function log(...args: any[]) {
   if (DEBUG) {
@@ -10,6 +15,7 @@ function log(...args: any[]) {
 }
 
 const axiosInstance = axios.create({
+//   baseURL: process.env.NEXT_PUBLIC_API_URL,
   baseURL: 'http://127.0.0.1:8000',
 });
 
@@ -42,14 +48,13 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    log('Response error:', error.response.status, error.config.url);
+  async (error: AxiosError) => {
+    const originalRequest = error.config as CustomAxiosRequestConfig;
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
-    const originalRequest = error.config;
-
-    if (error.response.status === 401 && !originalRequest._retry) {
-      log('Attempting to refresh token');
-
+    if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -62,30 +67,23 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      return new Promise((resolve, reject) => {
-        refreshAccessToken()
-          .then(newToken => {
-            if (newToken) {
-              log('Token refreshed successfully');
-              axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-              originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-              processQueue(null, newToken);
-              resolve(axiosInstance(originalRequest));
-            } else {
-              log('Failed to refresh token');
-              processQueue(new Error('Failed to refresh token'), null);
-              reject(error);
-            }
-          })
-          .catch(refreshError => {
-            log('Error during token refresh:', refreshError);
-            processQueue(refreshError, null);
-            reject(refreshError);
-          })
-          .finally(() => {
-            isRefreshing = false;
-          });
-      });
+      try {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+          originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+          processQueue(null, newToken);
+          return axiosInstance(originalRequest);
+        } else {
+          processQueue(new Error('Failed to refresh token'), null);
+          return Promise.reject(error);
+        }
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
 
     return Promise.reject(error);

@@ -14,6 +14,7 @@ import { useParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from "@/hooks/use-toast"
 import axiosInstance from '@/lib/axios'
+import { withAuth } from '@/components/ProtectedRoute'
 
 interface OCRResult {
   items: Array<{ name: string; price: number }>;
@@ -23,7 +24,7 @@ interface OCRResult {
   image_url: string;
 }
 
-export default function BillUploadPage() {
+function BillUploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null)
@@ -309,3 +310,5 @@ export default function BillUploadPage() {
     </div>
   )
 }
+
+export default withAuth(BillUploadPage);

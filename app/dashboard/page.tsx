@@ -10,6 +10,7 @@ import { Bell, LogOut, Plus, UserCircle, Users, Crown } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from "@/hooks/use-toast"
 import axiosInstance from '@/lib/axios'
+import { withAuth } from '@/components/ProtectedRoute'
 
 interface User {
   email: string;
@@ -26,7 +27,7 @@ interface Tribe {
   leader?: User;
 }
 
-export default function Dashboard() {
+function Dashboard() {
   const [tribes, setTribes] = useState<Tribe[]>([])
   const { isAuthenticated, isLoading, logout, userId } = useAuth()
 
@@ -162,3 +163,5 @@ export default function Dashboard() {
     </div>
   )
 }
+
+export default withAuth(Dashboard);

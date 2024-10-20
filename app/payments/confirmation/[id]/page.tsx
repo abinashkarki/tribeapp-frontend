@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from '@/hooks/useAuth'
 import { ArrowLeft, Upload, CheckCircle, Clock, HelpCircle, AlertCircle, Loader2 } from 'lucide-react'
 import axiosInstance from '@/lib/axios'
+import { withAuth } from '@/components/ProtectedRoute'
 
 interface BillSplit {
   id: number;
@@ -49,7 +50,7 @@ interface PaymentHistory {
   updated_at: string;
 }
 
-export default function PaymentConfirmationPage() {
+function PaymentConfirmationPage() {
   const [userSplit, setUserSplit] = useState<BillSplit | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
@@ -313,12 +314,14 @@ export default function PaymentConfirmationPage() {
                         <Button
                           onClick={() => fileInputRef.current?.click()}
                           disabled={isProcessing}
+                          className={selectedFile ? "opacity-50" : ""}
                         >
                           Select File
                         </Button>
                         <Button
                           onClick={handleFileUpload}
                           disabled={!selectedFile || isProcessing}
+                          className={selectedFile && !isProcessing ? "shadow-[0_0_10px_rgba(0,255,0,0.1)]" : ""}
                         >
                           {isProcessing ? (
                             <>
@@ -376,3 +379,5 @@ export default function PaymentConfirmationPage() {
     </div>
   )
 }
+
+export default withAuth(PaymentConfirmationPage);

@@ -26,7 +26,6 @@ export default function SignUp() {
       const response = await axiosInstance.post('/users/', { email, username, password });
 
       if (response.status === 201) {
-        const data = response.data;
         toast({
           title: "Account created",
           description: "Your account has been successfully created. Please sign in.",

@@ -25,6 +25,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from '@/hooks/useAuth'
 import axiosInstance from '@/lib/axios'
+import { withAuth } from '@/components/ProtectedRoute'
 
 interface Payment {
   id: number;
@@ -68,7 +69,7 @@ interface Bill {
   splits: Split[];
 }
 
-export default function ViewBillDetailsPage() {
+function ViewBillDetailsPage() {
   const [bill, setBill] = useState<Bill | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
@@ -271,3 +272,5 @@ export default function ViewBillDetailsPage() {
     </div>
   )
 }
+
+export default withAuth(ViewBillDetailsPage);
