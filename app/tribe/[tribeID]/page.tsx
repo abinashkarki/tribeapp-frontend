@@ -257,7 +257,6 @@ export default function TribePage() {
                   const initialSplit = userSplits[0];
                   const updatedSplit = userSplits[1];
                   const currentSplit = updatedSplit || initialSplit;
-                  console.log(`User splits for bill ${bill.id}:`, userSplits); // Log user splits
                   return (
                     <Card key={bill.id}>
                       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -282,9 +281,23 @@ export default function TribePage() {
                             <p className="text-sm font-medium">Your Share</p>
                             {initialSplit ? (
                               updatedSplit ? (
-                                <div>
-                                  <p className="text-sm text-muted-foreground line-through">${initialSplit.amount}</p>
-                                  <p className="text-sm text-muted-foreground">${updatedSplit.amount}</p>
+                                <div className="flex items-center">
+                                  <div>
+                                    <p className="text-sm text-muted-foreground line-through">${initialSplit.amount}</p>
+                                    <p className="text-sm text-muted-foreground">${updatedSplit.amount}</p>
+                                  </div>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="p-0 h-auto ml-1">
+                                          <Info className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>The crossed-out amount is the initial split. The tribe leader has updated your share to the new amount shown below.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 </div>
                               ) : (
                                 <p className="text-sm text-muted-foreground">${initialSplit.amount}</p>

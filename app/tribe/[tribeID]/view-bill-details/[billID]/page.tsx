@@ -42,6 +42,16 @@ interface MemberPayment {
   payments: Payment[];
 }
 
+interface Split {
+  id: number;
+  bill_id: number;
+  user_id: number;
+  amount: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Bill {
   id: number;
   title: string;
@@ -55,6 +65,7 @@ interface Bill {
   status: string;
   previous_payment: string;
   members: MemberPayment[];
+  splits: Split[];
 }
 
 export default function ViewBillDetailsPage() {
@@ -78,23 +89,28 @@ export default function ViewBillDetailsPage() {
   const fetchBillDetailsAndPaymentHistory = async () => {
     setIsLoading(true)
     try {
-      const [billResponse, paymentHistoryResponse] = await Promise.all([
+      const [billResponse, paymentHistoryResponse, splitsResponse] = await Promise.all([
         axiosInstance.get(`/bills/bills/${billID}`),
-        axiosInstance.get(`/bills/bills/${billID}/members-payment-history`)
+        axiosInstance.get(`/bills/bills/${billID}/members-payment-history`),
+        axiosInstance.get(`/tribes/bills/${billID}/splits`)
       ]);
 
       const billData = billResponse.data;
       const paymentHistoryData = paymentHistoryResponse.data;
+      const splitsData: Split[] = splitsResponse.data;
 
       const userPayment = paymentHistoryData.members.find((member: MemberPayment) => member.user_id === Number(userId))
+      const userSplits = splitsData.filter(split => split.user_id === Number(userId));
+      const initialSplit = userSplits[0];
+      const updatedSplit = userSplits.length > 1 ? userSplits[1] : null;
 
       const combinedBillData: Bill = {
         ...billData,
-        user_amount: userPayment ? userPayment.amount_owed : '0',
+        user_amount: updatedSplit ? updatedSplit.amount : (initialSplit ? initialSplit.amount : '0'),
         status: userPayment
           ? (() => {
               const totalPaid = userPayment.payments.reduce((sum: number, payment: Payment) => sum + parseFloat(payment.amount), 0);
-              const amountOwed = parseFloat(userPayment.amount_owed);
+              const amountOwed = parseFloat(updatedSplit ? updatedSplit.amount : (initialSplit ? initialSplit.amount : '0'));
               if (totalPaid >= amountOwed) {
                 return 'SETTLED';
               } else if (totalPaid > 0) {
@@ -107,7 +123,8 @@ export default function ViewBillDetailsPage() {
         previous_payment: userPayment
           ? userPayment.payments.reduce((sum: number, payment: Payment) => sum + parseFloat(payment.amount), 0).toFixed(2)
           : '0',
-        members: paymentHistoryData.members
+        members: paymentHistoryData.members,
+        splits: userSplits  // Store only the user's splits
       }
 
       setBill(combinedBillData)
@@ -209,7 +226,14 @@ export default function ViewBillDetailsPage() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Your Share</h3>
                 <div className="flex items-center justify-between">
-                  <p className="text-3xl font-bold text-primary">${formatAmount(bill.user_amount)}</p>
+                  {bill.splits.length > 1 ? (
+                    <div>
+                      <p className="text-3xl font-bold text-primary line-through">${formatAmount(bill.splits[0].amount)}</p>
+                      <p className="text-3xl font-bold text-primary">${formatAmount(bill.splits[1].amount)}</p>
+                    </div>
+                  ) : (
+                    <p className="text-3xl font-bold text-primary">${formatAmount(bill.user_amount)}</p>
+                  )}
                   <Badge variant={bill.status === 'PENDING' ? 'destructive' : 'default'} className="text-sm">
                     {bill.status}
                   </Badge>
