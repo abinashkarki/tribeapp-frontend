@@ -129,7 +129,7 @@ function ViewBillDetailsPage() {
       }
 
       setBill(combinedBillData)
-      setFullImageUrl(combinedBillData.image_url ? `http://127.0.0.1:8000${combinedBillData.image_url}` : null)
+      setFullImageUrl(combinedBillData.image_url ? `${process.env.NEXT_PUBLIC_API_URL}${combinedBillData.image_url}` : null)
     } catch (error) {
       console.error('Error fetching bill details and payment history:', error)
       toast({

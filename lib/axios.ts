@@ -15,8 +15,7 @@ function log(...args: any[]) {
 }
 
 const axiosInstance = axios.create({
-//   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  baseURL: 'http://127.0.0.1:8000',
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
 let isRefreshing = false;

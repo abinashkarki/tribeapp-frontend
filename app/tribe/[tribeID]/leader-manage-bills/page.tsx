@@ -170,7 +170,7 @@ export default withAuth(function LeaderManageBillsPage() {
   const renderProofImage = (proofImageUrl: string | null) => {
     if (!proofImageUrl) return null;
 
-    const fullImageUrl = `http://127.0.0.1:8000${proofImageUrl}`;
+    const fullImageUrl = `${process.env.NEXT_PUBLIC_API_URL}${proofImageUrl}`;
 
     return (
       <Dialog>

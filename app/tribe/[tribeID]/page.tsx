@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Settings, Plus, MoreVertical, Send, Trash2, Info } from 'lucide-react'
+import { ArrowLeft, Settings, Plus, MoreVertical, Send, Trash2, Info, Receipt, Upload } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -57,6 +57,49 @@ interface Tribe {
   created_by: number;
   description: string;
   updated_at: string;
+}
+
+function EmptyBillState({ onUpload }: { onUpload: () => void }) {
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardContent className="space-y-6 pt-6">
+        <div className="flex justify-center">
+          <div className="relative">
+            <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center">
+              <Receipt className="w-16 h-16 text-primary" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 bg-background rounded-full p-2">
+              <Upload className="w-6 h-6 text-primary" />
+            </div>
+          </div>
+        </div>
+        <h2 className="text-2xl font-bold text-center">No Bills Yet</h2>
+        <p className="text-center text-muted-foreground">
+          Start by uploading a bill or wait for a tribe member to share one.
+        </p>
+        <div className="space-y-2">
+          <h3 className="font-semibold text-center">With Bill Management, you can:</h3>
+          <ul className="space-y-1">
+            {[
+              "Upload and share bills with your tribe",
+              "View and manage shared bills",
+              "Track payment status and history"
+            ].map((item, index) => (
+              <li key={index} className="flex items-center space-x-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span className="text-sm text-muted-foreground">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-center">
+        <Button className="w-full" onClick={onUpload}>
+          <Upload className="mr-2 h-4 w-4" /> Upload Your First Bill
+        </Button>
+      </CardFooter>
+    </Card>
+  )
 }
 
 export default withAuth(function TribePage() {
@@ -152,6 +195,11 @@ export default withAuth(function TribePage() {
     router.push(`/tribe/${tribeID}/leader-manage-bills`);
   };
 
+  // Add this new function to handle bill upload
+  const handleUploadBill = () => {
+    router.push(`/tribe/${tribeID}/upload-bill`)
+  }
+
   if (isLoading) {
     return <div>Loading...</div>
   }
@@ -236,7 +284,7 @@ export default withAuth(function TribePage() {
             {/* <TabsTrigger value="chat">Chat</TabsTrigger> */}
           </TabsList>
           <TabsContent value="bills">
-            <div className="space-y-6">
+            <div className="space-y-8"> {/* Changed from space-y-6 to space-y-8 */}
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">{tribeName ? `${tribeName} Bills` : 'Bills'}</h2>
                 <div className="flex space-x-2">
@@ -252,89 +300,95 @@ export default withAuth(function TribePage() {
                   )}
                 </div>
               </div>
-              <div className="grid gap-4">
-                {bills.map((bill) => {
-                  const userSplits = bill.splits ? bill.splits.filter(split => split.user_id === Number(userId)) : [];
-                  const initialSplit = userSplits[0];
-                  const updatedSplit = userSplits[1];
-                  const currentSplit = updatedSplit || initialSplit;
-                  return (
-                    <Card key={bill.id}>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                          {bill.title}
-                        </CardTitle>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm font-medium">Date Added</p>
-                            <p className="text-sm text-muted-foreground">{new Date(bill.created_at).toLocaleDateString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Total Amount</p>
-                            <p className="text-sm text-muted-foreground">${bill.total_amount}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Your Share</p>
-                            {initialSplit ? (
-                              updatedSplit ? (
-                                <div className="flex items-center">
-                                  <div>
-                                    <p className="text-sm text-muted-foreground line-through">${initialSplit.amount}</p>
-                                    <p className="text-sm text-muted-foreground">${updatedSplit.amount}</p>
+              {bills.length === 0 ? (
+                <div className="mt-8"> {/* Added this wrapper div with top margin */}
+                  <EmptyBillState onUpload={handleUploadBill} />
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {bills.map((bill) => {
+                    const userSplits = bill.splits ? bill.splits.filter(split => split.user_id === Number(userId)) : [];
+                    const initialSplit = userSplits[0];
+                    const updatedSplit = userSplits[1];
+                    const currentSplit = updatedSplit || initialSplit;
+                    return (
+                      <Card key={bill.id}>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">
+                            {bill.title}
+                          </CardTitle>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm font-medium">Date Added</p>
+                              <p className="text-sm text-muted-foreground">{new Date(bill.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Total Amount</p>
+                              <p className="text-sm text-muted-foreground">${bill.total_amount}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Your Share</p>
+                              {initialSplit ? (
+                                updatedSplit ? (
+                                  <div className="flex items-center">
+                                    <div>
+                                      <p className="text-sm text-muted-foreground line-through">${initialSplit.amount}</p>
+                                      <p className="text-sm text-muted-foreground">${updatedSplit.amount}</p>
+                                    </div>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button variant="ghost" size="sm" className="p-0 h-auto ml-1">
+                                            <Info className="h-4 w-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>The crossed-out amount is the initial split. The tribe leader has updated your share to the new amount shown below.</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   </div>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="p-0 h-auto ml-1">
-                                          <Info className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>The crossed-out amount is the initial split. The tribe leader has updated your share to the new amount shown below.</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">${initialSplit.amount}</p>
+                                )
                               ) : (
-                                <p className="text-sm text-muted-foreground">${initialSplit.amount}</p>
-                              )
-                            ) : (
-                              <p className="text-sm text-muted-foreground">N/A</p>
+                                <p className="text-sm text-muted-foreground">N/A</p>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Status</p>
+                              <p className={`text-sm ${initialSplit ? (initialSplit.status === 'PENDING' ? 'text-yellow-500' : 'text-green-500') : 'text-gray-500'}`}>
+                                {initialSplit ? initialSplit.status : 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2 mt-4">
+                            <Button 
+                              className="flex-1" 
+                              variant="secondary"
+                              onClick={() => handleViewDetails(bill.id)}
+                            >
+                              View Details
+                            </Button>
+                            {currentSplit && (
+                              <Link href={`/payments/confirmation/${bill.id}`} className="flex-1">
+                                <Button className="w-full" variant="default">
+                                  Make Payment
+                                </Button>
+                              </Link>
                             )}
                           </div>
-                          <div>
-                            <p className="text-sm font-medium">Status</p>
-                            <p className={`text-sm ${initialSplit ? (initialSplit.status === 'PENDING' ? 'text-yellow-500' : 'text-green-500') : 'text-gray-500'}`}>
-                              {initialSplit ? initialSplit.status : 'N/A'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2 mt-4">
-                          <Button 
-                            className="flex-1" 
-                            variant="secondary"
-                            onClick={() => handleViewDetails(bill.id)}
-                          >
-                            View Details
-                          </Button>
-                          {currentSplit && (
-                            <Link href={`/payments/confirmation/${bill.id}`} className="flex-1">
-                              <Button className="w-full" variant="default">
-                                Make Payment
-                              </Button>
-                            </Link>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </TabsContent>
           <TabsContent value="chat">
