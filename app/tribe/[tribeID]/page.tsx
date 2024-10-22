@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
@@ -107,7 +107,7 @@ export default withAuth(function TribePage() {
   const [tribeName, setTribeName] = useState<string>("")
   const [activeTab, setActiveTab] = useState("bills")
   const [newMessage, setNewMessage] = useState("")
-  const { isAuthenticated, isLoading, accessToken, userId } = useAuth()
+  const { isAuthenticated, isLoading, userId } = useAuth()
   const { toast } = useToast()
   const params = useParams()
   const tribeID = params.tribeID
@@ -115,14 +115,7 @@ export default withAuth(function TribePage() {
   const [copied, setCopied] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      fetchTribeDetails()
-      fetchBills()
-    }
-  }, [isAuthenticated, isLoading, tribeID])
-
-  const fetchTribeDetails = async () => {
+  const fetchTribeDetails = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/tribes/tribes/${tribeID}`);
       const data: Tribe = response.data;
@@ -136,9 +129,9 @@ export default withAuth(function TribePage() {
         variant: "destructive",
       });
     }
-  };
+  }, [tribeID, toast]);
 
-  const fetchBills = async () => {
+  const fetchBills = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/tribes/tribes/${tribeID}/bills`);
       const data: Bill[] = response.data;
@@ -147,7 +140,6 @@ export default withAuth(function TribePage() {
         const splits: BillSplit[] = splitsResponse.data;
         return { ...bill, splits };
       }));
-      // Sort bills by created_at in descending order
       const sortedBills = billsWithSplits.sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -160,7 +152,14 @@ export default withAuth(function TribePage() {
         variant: "destructive",
       });
     }
-  };
+  }, [tribeID, toast]);
+
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      fetchTribeDetails()
+      fetchBills()
+    }
+  }, [isAuthenticated, isLoading, fetchTribeDetails, fetchBills])
 
   const handleSendMessage = () => {
     // Logic to send message would go here

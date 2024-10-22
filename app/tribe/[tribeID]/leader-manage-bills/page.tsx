@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from "@/hooks/use-toast"
@@ -54,15 +54,7 @@ export default withAuth(function LeaderManageBillsPage() {
   const { toast } = useToast()
   const router = useRouter()
 
-  useEffect(() => {
-    if (isAuthenticated && accessToken) {
-      setIsLoading(false);
-      fetchTribeDetails();
-      fetchBills();
-    }
-  }, [isAuthenticated, accessToken]);
-
-  const fetchTribeDetails = async () => {
+  const fetchTribeDetails = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/tribes/tribes/${tribeID}`);
       if (response.status === 200) {
@@ -79,9 +71,9 @@ export default withAuth(function LeaderManageBillsPage() {
         variant: "destructive",
       });
     }
-  };
+  }, [tribeID, toast]);
 
-  const fetchBills = async () => {
+  const fetchBills = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/tribes/tribes/${tribeID}/bills`);
       if (response.status === 200) {
@@ -98,7 +90,15 @@ export default withAuth(function LeaderManageBillsPage() {
         variant: "destructive",
       });
     }
-  };
+  }, [tribeID, toast]);
+
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      setIsLoading(false);
+      fetchTribeDetails();
+      fetchBills();
+    }
+  }, [isAuthenticated, accessToken, fetchTribeDetails, fetchBills]);
 
   const fetchPaymentHistory = async (billId: number) => {
     try {

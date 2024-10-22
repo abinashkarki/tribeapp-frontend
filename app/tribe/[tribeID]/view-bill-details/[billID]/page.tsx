@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { ArrowLeft, Calendar, DollarSign, FileText, Loader2, Receipt } from "lucide-react"
@@ -76,18 +76,11 @@ function ViewBillDetailsPage() {
   const { accessToken, userId } = useAuth()
   const params = useParams()
   const router = useRouter()
-  const tribeID = params.tribeID
   const billID = params.billID
 
   const [fullImageUrl, setFullImageUrl] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (accessToken && billID) {
-      fetchBillDetailsAndPaymentHistory()
-    }
-  }, [billID, accessToken, userId])
-
-  const fetchBillDetailsAndPaymentHistory = async () => {
+  const fetchBillDetailsAndPaymentHistory = useCallback(async () => {
     setIsLoading(true)
     try {
       const [billResponse, paymentHistoryResponse, splitsResponse] = await Promise.all([
@@ -140,7 +133,13 @@ function ViewBillDetailsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [billID, userId, toast])
+
+  useEffect(() => {
+    if (accessToken && billID) {
+      fetchBillDetailsAndPaymentHistory()
+    }
+  }, [billID, accessToken, userId, fetchBillDetailsAndPaymentHistory])
 
   const formatAmount = (amount: string): string => {
     const parsedAmount = parseFloat(amount)

@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { ArrowLeft, Copy, Users, UserPlus } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
 import axiosInstance from '@/lib/axios'
 
 export default function CreateJoinTribePage() {
@@ -20,7 +19,6 @@ export default function CreateJoinTribePage() {
   const [tribeDescription, setTribeDescription] = useState('')
   const [tribeCode, setTribeCode] = useState('')
   const [createdTribeCode, setCreatedTribeCode] = useState('')
-  const { accessToken } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
 

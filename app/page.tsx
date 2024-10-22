@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'; // Import Link from next/link
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Users, Receipt, CreditCard, CheckCircle, X, DollarSign, Smile, Frown } from 'lucide-react'
+import { ArrowRight, Users, Receipt, CreditCard, X, Smile, Frown } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
 const HeroSection = () => {
@@ -19,7 +19,7 @@ const HeroSection = () => {
       setCurrentProblem((prev) => (prev + 1) % problems.length)
     }, 3000)
     return () => clearInterval(timer)
-  }, [])
+  }, [problems.length]) // Add problems.length to the dependency array
 
   return (
     <section className="min-h-screen flex flex-col items-center justify-center text-center px-4">
@@ -146,7 +146,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ quote, author, role }
     transition={{ duration: 0.5 }}
     viewport={{ once: true }}
   >
-    <p className="text-gray-600 italic mb-4">"{quote}"</p>
+    <p className="text-gray-600 italic mb-4">&ldquo;{quote}&rdquo;</p>
     <p className="font-semibold">{author}</p>
     <p className="text-sm text-gray-500">{role}</p>
   </motion.div>

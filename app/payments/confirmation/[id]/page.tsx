@@ -1,9 +1,7 @@
 'use client'
 
-import React from 'react';
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -66,19 +64,7 @@ function PaymentConfirmationPage() {
   const [confirmationError, setConfirmationError] = useState<string | null>(null)
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([])
 
-  useEffect(() => {
-    if (accessToken && userId) {
-      fetchUserSplit()
-    }
-  }, [billId, accessToken, userId])
-
-  useEffect(() => {
-    if (userSplit && accessToken) {
-      fetchPaymentHistory()
-    }
-  }, [userSplit, accessToken])
-
-  const fetchUserSplit = async () => {
+  const fetchUserSplit = useCallback(async () => {
     setIsLoading(true)
     try {
       const response = await axiosInstance.get(`/bills/bills/${billId}/my-split`);
@@ -96,9 +82,9 @@ function PaymentConfirmationPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [billId, toast])
 
-  const fetchPaymentHistory = async () => {
+  const fetchPaymentHistory = useCallback(async () => {
     if (!userSplit || !accessToken) {
       console.log('fetchPaymentHistory: userSplit or accessToken is null, returning early')
       return
@@ -118,7 +104,19 @@ function PaymentConfirmationPage() {
         variant: "destructive",
       });
     }
-  }
+  }, [userSplit, accessToken, toast])
+
+  useEffect(() => {
+    if (accessToken && userId) {
+      fetchUserSplit()
+    }
+  }, [accessToken, userId, fetchUserSplit])
+
+  useEffect(() => {
+    if (userSplit && accessToken) {
+      fetchPaymentHistory()
+    }
+  }, [userSplit, accessToken, fetchPaymentHistory])
 
   const calculatePreviousPayments = () => {
     console.log('Calculating previous payments from:', paymentHistory)
@@ -175,10 +173,16 @@ function PaymentConfirmationPage() {
   }
 
   const handleConfirmPayment = async () => {
-    if (!paymentDetails || !userSplit) return
+    if (!paymentDetails || !userSplit) return;
 
-    setIsProcessing(true)
-    setConfirmationError(null)
+    // Validate payment details
+    if (!validatePaymentDetails(paymentDetails, userSplit)) {
+      setConfirmationError('Invalid payment details. Please check the amount and try again.');
+      return;
+    }
+
+    setIsProcessing(true);
+    setConfirmationError(null);
 
     try {
       const response = await axiosInstance.post('/bills/payments/', {
@@ -188,31 +192,31 @@ function PaymentConfirmationPage() {
         proof_image_url: paymentDetails.image_url
       });
 
-      toast({
-        title: "Success",
-        description: "Payment confirmed successfully. Refreshing...",
-      })
+      if (response.status === 200 || response.status === 201) {
+        toast({
+          title: "Success",
+          description: "Payment confirmed successfully. Refreshing...",
+        });
 
-      // Disable the confirm button to prevent double submission
-      setIsProcessing(true)
-
-      // Short delay before refreshing to ensure the toast is seen
-      setTimeout(() => {
-        // Refresh the current page
-        window.location.reload()
-      }, 2000)
-
+        // Short delay before refreshing to ensure the toast is seen
+        setTimeout(() => {
+          window.location.reload();
+        }, REFRESH_DELAY_MS);
+      } else {
+        throw new Error('Unexpected response status: ' + response.status);
+      }
     } catch (error) {
-      console.error('Error confirming payment:', error)
-      setConfirmationError('Failed to confirm payment. Please try again.')
+      console.error('Error confirming payment:', error);
+      setConfirmationError('Failed to confirm payment. Please try again.');
       toast({
         title: "Error",
         description: "Failed to confirm payment. Please try again.",
         variant: "destructive",
-      })
-      setIsProcessing(false)
+      });
+    } finally {
+      setIsProcessing(false);
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -224,6 +228,19 @@ function PaymentConfirmationPage() {
         return <AlertCircle className="h-5 w-5 text-red-500" />
     }
   }
+
+  const REFRESH_DELAY_MS = 2000; // Constant for refresh delay
+
+  const validatePaymentDetails = (details: PaymentDetails, split: BillSplit): boolean => {
+    if (!details.payment_amount || details.payment_amount <= 0) {
+      return false;
+    }
+    const splitAmount = parseFloat(split.amount);
+    if (details.payment_amount > splitAmount) {
+      return false;
+    }
+    return true;
+  };
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -294,7 +311,7 @@ function PaymentConfirmationPage() {
                                 <ul className="list-disc list-inside mt-2">
                                   <li>The transaction amount (${parseFloat(userSplit.amount).toFixed(2)})</li>
                                   <li>The date of the transaction</li>
-                                  <li>The recipient's name or account information</li>
+                                  <li>The recipient&apos;s name or account information</li>
                                 </ul>
                                 Ensure all sensitive information is redacted before uploading.
                               </DialogDescription>

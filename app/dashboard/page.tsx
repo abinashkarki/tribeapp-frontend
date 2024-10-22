@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
@@ -34,15 +34,7 @@ function Dashboard() {
   const router = useRouter()
   const { toast } = useToast()
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/signin')
-    } else if (isAuthenticated) {
-      fetchTribes()
-    }
-  }, [isLoading, isAuthenticated, router])
-
-  const fetchUserDetails = async (userId: number): Promise<User> => {
+  const fetchUserDetails = useCallback(async (userId: number): Promise<User> => {
     try {
       const response = await axiosInstance.get(`/users/users/${userId}`);
       return response.data;
@@ -50,9 +42,9 @@ function Dashboard() {
       console.error('Error fetching user details:', error);
       throw error;
     }
-  }
+  }, []) // Empty dependency array as it doesn't depend on any component state or props
 
-  const fetchTribes = async () => {
+  const fetchTribes = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/tribes/users/${userId}/tribes`);
       const data: Tribe[] = response.data;
@@ -77,7 +69,15 @@ function Dashboard() {
         variant: "destructive",
       })
     }
-  }
+  }, [userId, toast, fetchUserDetails])
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/auth/signin')
+    } else if (isAuthenticated) {
+      fetchTribes()
+    }
+  }, [isLoading, isAuthenticated, router, fetchTribes])
 
   if (isLoading) {
     return <div>Loading...</div>

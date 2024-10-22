@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +11,7 @@ import { ArrowLeft } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from '@/hooks/useAuth'
 import axiosInstance from '@/lib/axios'
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
 
 interface BillData {
   id: number;
@@ -38,17 +38,7 @@ export default function BillSplitterPage({ params }: { params: { tribeID: string
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
-  useEffect(() => {
-    if (isAuthenticated && accessToken) {
-      console.log('Fetching data...')
-      fetchData()
-    } else {
-      console.log('Not authenticated or no access token')
-      setIsLoading(false)
-    }
-  }, [isAuthenticated, accessToken, params.tribeID, params.billID])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [billResponse, membersResponse] = await Promise.all([
         axiosInstance.get(`/bills/bills/${params.billID}`),
@@ -83,7 +73,17 @@ export default function BillSplitterPage({ params }: { params: { tribeID: string
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [params.tribeID, params.billID, toast, splits])
+
+  useEffect(() => {
+    if (isAuthenticated && accessToken) {
+      console.log('Fetching data...')
+      fetchData()
+    } else {
+      console.log('Not authenticated or no access token')
+      setIsLoading(false)
+    }
+  }, [isAuthenticated, accessToken, fetchData])
 
   const updateSplit = (index: number, field: 'amount' | 'percentage' | 'shares', value: number) => {
     console.log('Updating split:', { index, field, value, currentSplit: splits[index] }); // Debug log
