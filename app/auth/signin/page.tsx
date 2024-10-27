@@ -94,14 +94,6 @@ export default function SignIn() {
           </Button>
         </form>
         <Separator />
-        <div className="space-y-4">
-          <Button variant="outline" className="w-full">
-            Sign in with Google
-          </Button>
-          <Button variant="outline" className="w-full">
-            Sign in with Apple
-          </Button>
-        </div>
         <div className="text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link href="/auth/signup" className="font-medium underline">

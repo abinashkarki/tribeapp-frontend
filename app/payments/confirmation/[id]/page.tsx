@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from '@/hooks/useAuth'
 import { ArrowLeft, Upload, CheckCircle, Clock, HelpCircle, AlertCircle, Loader2 } from 'lucide-react'
+import axios from 'axios'
 import axiosInstance from '@/lib/axios'
 import { withAuth } from '@/components/ProtectedRoute'
 
@@ -32,7 +33,7 @@ interface BillSplit {
 
 interface PaymentDetails {
   recipient: string | null;
-  payment_amount: number | null;
+  payment_amount: number;
   image_url: string | null;
 }
 
@@ -118,12 +119,12 @@ function PaymentConfirmationPage() {
     }
   }, [userSplit, accessToken, fetchPaymentHistory])
 
-  const calculatePreviousPayments = () => {
-    console.log('Calculating previous payments from:', paymentHistory)
-    const total = paymentHistory.reduce((sum, payment) => sum + parseFloat(payment.amount), 0)
-    console.log('Calculated total:', total)
-    return total.toFixed(2)
-  }
+  const calculatePreviousPayments = (): number => {
+    console.log('Calculating previous payments from:', paymentHistory);
+    const total = paymentHistory.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+    console.log('Calculated total:', total);
+    return total;
+  };
 
   const handleFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -173,10 +174,18 @@ function PaymentConfirmationPage() {
   }
 
   const handleConfirmPayment = async () => {
-    if (!paymentDetails || !userSplit) return;
+    console.log('handleConfirmPayment function called');
+
+    if (!paymentDetails || !userSplit) {
+      console.error('Missing paymentDetails or userSplit:', { paymentDetails, userSplit });
+      return;
+    }
 
     // Validate payment details
-    if (!validatePaymentDetails(paymentDetails, userSplit)) {
+    const isValid = validatePaymentDetails(paymentDetails, userSplit);
+    console.log('Payment details validation result:', isValid);
+
+    if (!isValid) {
       setConfirmationError('Invalid payment details. Please check the amount and try again.');
       return;
     }
@@ -184,13 +193,23 @@ function PaymentConfirmationPage() {
     setIsProcessing(true);
     setConfirmationError(null);
 
+    const payload = {
+      bill_split_id: userSplit.id,
+      amount: Number(paymentDetails.payment_amount),
+      payment_date: new Date().toISOString().split('T')[0], // Today's date
+      proof_image_url: paymentDetails.image_url
+    };
+
+    console.log('Preparing to send payment confirmation:');
+    console.log('User Split:', userSplit);
+    console.log('Payment Details:', paymentDetails);
+    console.log('Payload:', payload);
+
     try {
-      const response = await axiosInstance.post('/bills/payments/', {
-        bill_split_id: userSplit.id,
-        amount: paymentDetails.payment_amount,
-        payment_date: new Date().toISOString().split('T')[0], // Today's date
-        proof_image_url: paymentDetails.image_url
-      });
+      console.log('Sending POST request to /bills/payments/');
+      const response = await axiosInstance.post('/bills/payments/', payload);
+
+      console.log('Payment confirmation response:', response);
 
       if (response.status === 200 || response.status === 201) {
         toast({
@@ -205,12 +224,34 @@ function PaymentConfirmationPage() {
       } else {
         throw new Error('Unexpected response status: ' + response.status);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error confirming payment:', error);
-      setConfirmationError('Failed to confirm payment. Please try again.');
+      
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error response:', error.response?.data);
+        console.error('Axios error status:', error.response?.status);
+        console.error('Axios error status text:', error.response?.statusText);
+
+        if (error.response?.status === 422) {
+          const errorData = error.response.data;
+          let errorMessage = 'Invalid data submitted. Please check your input and try again.';
+          
+          if (errorData.detail && Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail.map((err: any) => err.msg).join('. ');
+          }
+
+          console.error('Validation error message:', errorMessage);
+          setConfirmationError(errorMessage);
+        } else {
+          setConfirmationError('Failed to confirm payment. Please try again.');
+        }
+      } else {
+        setConfirmationError('An unexpected error occurred. Please try again.');
+      }
+
       toast({
         title: "Error",
-        description: "Failed to confirm payment. Please try again.",
+        description: "Failed to confirm payment. Please check the details and try again.",
         variant: "destructive",
       });
     } finally {
@@ -232,13 +273,33 @@ function PaymentConfirmationPage() {
   const REFRESH_DELAY_MS = 2000; // Constant for refresh delay
 
   const validatePaymentDetails = (details: PaymentDetails, split: BillSplit): boolean => {
-    if (!details.payment_amount || details.payment_amount <= 0) {
+    console.log('Validating payment details:', details, 'against split:', split);
+    
+    if (!details.payment_amount || typeof details.payment_amount !== 'number' || details.payment_amount <= 0) {
+      console.error('Invalid payment amount:', details.payment_amount);
       return false;
     }
+    
     const splitAmount = parseFloat(split.amount);
-    if (details.payment_amount > splitAmount) {
+    const previousPayments = calculatePreviousPayments();
+    const remainingAmount = splitAmount - previousPayments;
+    
+    console.log('Split amount:', splitAmount);
+    console.log('Previous payments:', previousPayments);
+    console.log('Remaining amount:', remainingAmount);
+    console.log('Current payment amount:', details.payment_amount);
+    
+    if (details.payment_amount > remainingAmount) {
+      console.error('Payment amount exceeds remaining amount:', details.payment_amount, '>', remainingAmount);
       return false;
     }
+    
+    if (!details.image_url) {
+      console.error('Missing proof image URL');
+      return false;
+    }
+    
+    console.log('Payment details are valid');
     return true;
   };
 
@@ -377,7 +438,13 @@ function PaymentConfirmationPage() {
                               onChange={(e) => setPaymentDetails(prev => ({ ...prev!, payment_amount: parseFloat(e.target.value) }))}
                             />
                           </div>
-                          <Button onClick={handleConfirmPayment} disabled={isProcessing}>
+                          <Button 
+                            onClick={() => {
+                              console.log('Confirm button clicked');
+                              handleConfirmPayment();
+                            }} 
+                            disabled={isProcessing}
+                          >
                             {isProcessing ? 'Confirming...' : 'Confirm'}
                           </Button>
                           {confirmationError && (
