@@ -226,7 +226,7 @@ export default withAuth(function TribePage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <header className="flex justify-between items-center mb-6">
         <Link href="/dashboard">
           <Button variant="ghost">

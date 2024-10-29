@@ -550,7 +550,7 @@ function ViewBillDetailsPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <Card className="overflow-hidden">
           <div className="relative h-64 md:h-80 bg-primary/10">
             <div className="absolute inset-0 bg-gradient-to-b from-primary/50 to-background/90" />

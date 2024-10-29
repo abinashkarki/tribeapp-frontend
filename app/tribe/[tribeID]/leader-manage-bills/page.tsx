@@ -611,7 +611,7 @@ function LeaderManageBillsPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <header className="flex items-center justify-between mb-6">
         <Button variant="ghost" onClick={() => router.push(`/tribe/${tribeID}`)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
