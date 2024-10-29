@@ -49,6 +49,13 @@ interface PaymentHistory {
   updated_at: string;
 }
 
+interface ErrorDetail {
+    msg: string;
+    // Add other potential fields that might exist in the error detail
+    loc?: string[];
+    type?: string;
+  }
+
 function PaymentConfirmationPage() {
   const [userSplit, setUserSplit] = useState<BillSplit | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -237,7 +244,7 @@ function PaymentConfirmationPage() {
           let errorMessage = 'Invalid data submitted. Please check your input and try again.';
           
           if (errorData.detail && Array.isArray(errorData.detail)) {
-            errorMessage = errorData.detail.map((err: any) => err.msg).join('. ');
+            errorMessage = errorData.detail.map((err: ErrorDetail) => err.msg).join('. ');
           }
 
           console.error('Validation error message:', errorMessage);
