@@ -131,6 +131,28 @@ export default withAuth(function TribePage() {
     }
   }, [tribeID, toast]);
 
+  async function deleteTribe(tribeId: number) {
+    try {
+      const response = await axiosInstance.delete(`/tribes/${tribeId}/delete`);
+      // Handle successful deletion, e.g., show a success message and redirect
+      console.log('Tribe deleted successfully:', response.data);
+      toast({
+        title: "Success",
+        description: "Tribe deleted successfully.",
+        variant: "default",
+      });
+      router.push('/dashboard'); 
+    } catch (error) {
+      // Handle error, e.g., show an error message
+      console.error('Error deleting tribe:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete tribe. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  }
+
   const fetchBills = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/tribes/tribes/${tribeID}/bills`);
@@ -261,11 +283,7 @@ export default withAuth(function TribePage() {
                   className="mt-2"
                   onClick={() => {
                     // Placeholder for delete functionality
-                    toast({
-                      title: "Not Implemented",
-                      description: "Delete tribe functionality is not yet implemented.",
-                      variant: "destructive",
-                    });
+                    deleteTribe(tribe!.id);
                   }}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
