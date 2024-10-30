@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter} from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Bell, LogOut, Plus, UserCircle, Users, Crown } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -25,6 +25,49 @@ interface Tribe {
   created_by: number;
   unsettled_bills: number;
   leader?: User;
+}
+
+function EmptyTribeState({ onJoin }: { onJoin: () => void }) {
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardContent className="space-y-6 pt-6">
+        <div className="flex justify-center">
+          <div className="relative">
+            <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="w-16 h-16 text-primary" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 bg-background rounded-full p-2">
+              <Plus className="w-6 h-6 text-primary" />
+            </div>
+          </div>
+        </div>
+        <h2 className="text-2xl font-bold text-center">No Tribes Yet</h2>
+        <p className="text-center text-muted-foreground">
+          Join a tribe or create your own to start managing bills with your friends and family.
+        </p>
+        <div className="space-y-2">
+          <h3 className="font-semibold text-center">With Tribe Management, you can:</h3>
+          <ul className="space-y-1">
+            {[
+              "Create and join tribes with your friends and family",
+              "Share and manage bills with your tribe",
+              "Track payment status and history"
+            ].map((item, index) => (
+              <li key={index} className="flex items-center space-x-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span className="text-sm text-muted-foreground">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-center">
+        <Button className="w-full" onClick={onJoin}>
+          <Plus className="mr-2 h-4 w-4" /> Join or Create a Tribe
+        </Button>
+      </CardFooter>
+    </Card>
+  )
 }
 
 function Dashboard() {
@@ -82,7 +125,6 @@ function Dashboard() {
   if (isLoading) {
     return <div>Loading...</div>
   }
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -119,46 +161,52 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {tribes.map((tribe) => (
-            <Card key={tribe.id}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xl font-bold">
-                  {tribe.name}
-                </CardTitle>
-                {tribe.unsettled_bills > 0 && (
-                  <Bell className="h-4 w-4 text-muted-foreground" />
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-sm text-muted-foreground">Tribe Leader:</span>
-                  <span className={`
-                    text-sm font-medium px-2 py-1 rounded-full
-                    ${tribe.created_by === Number(userId) 
-                      ? 'bg-amber-100 text-amber-800 flex items-center' 
-                      : 'bg-gray-100 text-gray-800'}
-                  `}>
-                    {tribe.created_by === Number(userId) && (
-                      <Crown className="w-3 h-3 mr-1 inline-block" />
-                    )}
-                    {tribe.leader?.username || 'Unknown'}
-                  </span>
-                </div>
-                {tribe.unsettled_bills > 0 && (
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {tribe.unsettled_bills} unsettled bill{tribe.unsettled_bills > 1 ? 's' : ''}
-                  </p>
-                )}
-                <Link href={`/tribe/${tribe.id}`}>
-                  <Button className="w-full mt-2" variant="secondary">
-                    View Tribe
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {tribes.length === 0 ? (
+          <div className="mt-8">
+            <EmptyTribeState onJoin={() => router.push('/tribe/create-join')} />
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {tribes.map((tribe) => (
+              <Card key={tribe.id}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-xl font-bold">
+                    {tribe.name}
+                  </CardTitle>
+                  {tribe.unsettled_bills > 0 && (
+                    <Bell className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className="text-sm text-muted-foreground">Tribe Leader:</span>
+                    <span className={`
+                      text-sm font-medium px-2 py-1 rounded-full
+                      ${tribe.created_by === Number(userId)
+                        ? 'bg-amber-100 text-amber-800 flex items-center'
+                        : 'bg-gray-100 text-gray-800'}
+                    `}>
+                      {tribe.created_by === Number(userId) && (
+                        <Crown className="w-3 h-3 mr-1 inline-block" />
+                      )}
+                      {tribe.leader?.username || 'Unknown'}
+                    </span>
+                  </div>
+                  {tribe.unsettled_bills > 0 && (
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {tribe.unsettled_bills} unsettled bill{tribe.unsettled_bills > 1 ? 's' : ''}
+                    </p>
+                  )}
+                  <Link href={`/tribe/${tribe.id}`}>
+                    <Button className="w-full mt-2" variant="secondary">
+                      View Tribe
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   )
