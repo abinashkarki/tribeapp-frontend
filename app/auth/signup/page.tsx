@@ -25,12 +25,14 @@ export default function SignUp() {
     try {
       const response = await axiosInstance.post('/users/', { email, username, password });
 
-      if (response.status === 201) {
+      if (response.status === 201 || response.status === 200) {
         toast({
           title: "Account created",
           description: "Your account has been successfully created. Please sign in.",
           variant: "default",
+          duration: 5000,
         });
+        
         router.push('/auth/signin');
       } else {
         const errorData = response.data;
@@ -38,6 +40,7 @@ export default function SignUp() {
           title: "Sign up failed",
           description: errorData.detail || "Please check your information and try again.",
           variant: "destructive",
+          duration: 5000,
         });
       }
     } catch (error) {
@@ -46,6 +49,7 @@ export default function SignUp() {
         title: "Error",
         description: "An unexpected error occurred. Please try again later.",
         variant: "destructive",
+        duration: 5000,
       });
     } finally {
       setIsLoading(false);
@@ -97,7 +101,7 @@ export default function SignUp() {
           </Button>
         </form>
         <Separator />
-        <div className="space-y-4">
+        {/* <div className="space-y-4">
           <Button variant="outline" className="w-full">
             Sign up with Google
           </Button>
@@ -110,7 +114,7 @@ export default function SignUp() {
           <Link href="/auth/signin" className="font-medium underline">
             Sign In
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   )

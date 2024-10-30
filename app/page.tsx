@@ -49,7 +49,7 @@ const HeroSection = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
       >
-        TribeApp: Your solution to stress-free shared expenses
+        TribeBills: Your solution to stress-free shared expenses
       </motion.p>
       <motion.div
         initial={{ opacity: 0 }}
@@ -90,7 +90,7 @@ const BeforeAfterSection = () => {
   return (
     <section className="py-20 bg-gray-100">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">Experience the TribeApp Difference</h2>
+        <h2 className="text-3xl font-bold text-center mb-12">Experience the TribeBills Difference</h2>
         <div className="flex flex-col md:flex-row justify-center items-center space-y-8 md:space-y-0 md:space-x-12">
           <motion.div 
             className="bg-white p-6 rounded-lg shadow-lg w-full md:w-1/3"
@@ -100,7 +100,7 @@ const BeforeAfterSection = () => {
             viewport={{ once: true }}
           >
             <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Frown className="mr-2 text-red-500" /> Before TribeApp
+              <Frown className="mr-2 text-red-500" /> Before TribeBills
             </h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>Awkward money conversations</li>
@@ -117,7 +117,7 @@ const BeforeAfterSection = () => {
             viewport={{ once: true }}
           >
             <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Smile className="mr-2 text-green-500" /> With TribeApp
+              <Smile className="mr-2 text-green-500" /> With TribeBills
             </h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>Automated expense tracking</li>
@@ -152,7 +152,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ quote, author, role }
   </motion.div>
 )
 
-const TribeAppLandingPage = () => {
+const TribeBillsLandingPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
@@ -160,7 +160,7 @@ const TribeAppLandingPage = () => {
       <header className="sticky top-0 z-50 bg-background/50 backdrop-blur-sm border-b">
         <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="text-2xl font-bold text-primary">
-            TribeApp
+            TribeBills
           </div>
           <div className="space-x-4">
             <Link href="/auth/signin">
@@ -179,7 +179,7 @@ const TribeAppLandingPage = () => {
 
       <main className="container mx-auto px-4 py-16">
         <section className="mb-20">
-          <h2 className="text-3xl font-bold text-center mb-12">How TribeApp Makes Sharing Expenses Easy</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">How TribeBills Makes Sharing Expenses Easy</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FeatureCard 
               icon={Users} 
@@ -189,7 +189,7 @@ const TribeAppLandingPage = () => {
             <FeatureCard 
               icon={Receipt} 
               title="Snap & Split" 
-              description="Take a photo of your receipt and let TribeApp do the math."
+              description="Take a photo of your receipt and let TribeBills do the math."
             />
             <FeatureCard 
               icon={CreditCard} 
@@ -199,24 +199,24 @@ const TribeAppLandingPage = () => {
           </div>
         </section>
 
-        <section className="mb-20">
+        <section className="mb-20 py-10">
           <h2 className="text-3xl font-bold text-center mb-12">Happy Tribes, Happy Lives</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <TestimonialCard 
-              quote="TribeApp turned our house of 5 into a drama-free zone. Bills? What bills?"
-              author="Alex C."
+              quote="TribeBills turned our house of 3 into a drama-free zone. Bills? What bills?"
+              author="Manish K."
               role="Happy Housemate"
             />
             <TestimonialCard 
-              quote="Our friend group's Euro trip was a breeze thanks to TribeApp. No more 'who owes what' headaches!"
+              quote="Gave me the confidence to say &quot;I will clear the bill, we can split it in Tribebills!&quot;"
               author="Sophia L."
-              role="Globe Trotter"
+              role="fresh Bill Master"
             />
           </div>
         </section>
 
-        <section className="text-center mb-20">
-          <h2 className="text-3xl font-bold mb-8">Ready to Join the TribeApp Community?</h2>
+        <section className="text-center mb-20 py-10">
+          <h2 className="text-3xl font-bold mb-8">Ready to Join the TribeBills Community?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Experience a world where shared expenses bring people together, not apart!
           </p>
@@ -235,7 +235,7 @@ const TribeAppLandingPage = () => {
 
       <footer className="bg-gray-800 text-white py-8">
         <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
-          <p>&copy; 2023 TribeApp. All rights reserved.</p>
+          <p>&copy; 2023 TribeBills. All rights reserved.</p>
           <nav className="mt-4 md:mt-0">
             <ul className="flex space-x-4">
               <li><a href="#" className="hover:text-primary transition-colors duration-300">Privacy Policy</a></li>
@@ -285,4 +285,4 @@ const TribeAppLandingPage = () => {
   )
 }
 
-export default TribeAppLandingPage
+export default TribeBillsLandingPage
