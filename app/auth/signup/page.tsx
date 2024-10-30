@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -107,13 +108,13 @@ export default function SignUp() {
           <Button variant="outline" className="w-full">
             Sign up with Apple
           </Button>
-        </div>
+        </div> */}
         <div className="text-center text-sm">
           Already have an account?{" "}
           <Link href="/auth/signin" className="font-medium underline">
             Sign In
           </Link>
-        </div> */}
+        </div>
       </div>
     </div>
   )
