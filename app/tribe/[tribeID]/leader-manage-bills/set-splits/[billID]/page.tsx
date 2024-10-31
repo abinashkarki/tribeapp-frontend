@@ -45,24 +45,17 @@ export default function BillSplitterPage({ params }: { params: { tribeID: string
         axiosInstance.get(`/tribes/tribes/${params.tribeID}/members`)
       ])
 
-      console.log('Bill data:', billResponse.data)
-      console.log('Tribe members:', membersResponse.data)
-
       setBillData(billResponse.data)
       setTribeMembers(membersResponse.data)
-      
+
       const initialSplits = membersResponse.data.map((member: TribeMember) => ({
         memberId: member.id,
         amount: 0,
         percentage: 0,
         shares: 1
       }))
-      
-      console.log('Initial splits before setting state:', initialSplits)
-      
-      setSplits(initialSplits)
 
-      console.log('Initial splits after setting state:', splits)
+      setSplits(initialSplits)
     } catch (error) {
       console.error('Error fetching data:', error)
       toast({
@@ -73,113 +66,64 @@ export default function BillSplitterPage({ params }: { params: { tribeID: string
     } finally {
       setIsLoading(false)
     }
-  }, [params.tribeID, params.billID, toast, splits])
+  }, [params.tribeID, params.billID, toast])
 
   useEffect(() => {
     if (isAuthenticated && accessToken) {
-      console.log('Fetching data...')
       fetchData()
     } else {
-      console.log('Not authenticated or no access token')
       setIsLoading(false)
     }
   }, [isAuthenticated, accessToken, fetchData])
 
   const updateSplit = (index: number, field: 'amount' | 'percentage' | 'shares', value: number) => {
-    console.log('Updating split:', { index, field, value, currentSplit: splits[index] }); // Debug log
     setSplits(prevSplits => {
       const newSplits = [...prevSplits]
-      newSplits[index][field] = value
+      newSplits[index] = { ...newSplits[index], [field]: value }
       return newSplits
     })
   }
 
   const calculateSplits = () => {
-    if (!billData) return splits
+    if (!billData || !tribeMembers) return []
 
     const totalAmount = parseFloat(billData.total_amount)
-    
-    console.log('Splits before calculation:', splits); // Debug log
+    const numMembers = tribeMembers.length;
 
-    let calculatedSplits;
     switch (splitMethod) {
       case 'equal':
-        const equalAmount = totalAmount / tribeMembers.length
-        calculatedSplits = splits.map(split => ({ ...split, amount: equalAmount }))
-        break;
+        const equalAmount = totalAmount / numMembers;
+        return splits.map(split => ({ ...split, amount: equalAmount }));
       case 'percentage':
-        calculatedSplits = splits.map(split => ({
-          ...split,
-          amount: (totalAmount * split.percentage) / 100
-        }))
-        break;
+        return splits.map(split => ({ ...split, amount: (totalAmount * split.percentage) / 100 }));
       case 'share':
-        const totalShares = splits.reduce((sum, split) => sum + split.shares, 0)
-        calculatedSplits = splits.map(split => ({
-          ...split,
-          amount: (totalAmount * split.shares) / totalShares
-        }))
-        break;
-      default:
-        calculatedSplits = splits;
+        const totalShares = splits.reduce((sum, split) => sum + split.shares, 0);
+        return splits.map(split => ({ ...split, amount: (totalAmount * split.shares) / totalShares }));
+      default: // Manual
+        return splits;
     }
-
-    console.log('Splits after calculation:', calculatedSplits); // Debug log
-    return calculatedSplits;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSaving(true)
-    console.log('Splits before final calculation:', splits); // Debug log
+
     const calculatedSplits = calculateSplits()
-    
+
     try {
-      console.log('Calculated splits:', calculatedSplits) // Debug log
-
-      // Log each split to see why they might be filtered out
-      calculatedSplits.forEach((split, index) => {
-        console.log(`Split ${index}:`, split)
-        console.log(`  memberId defined:`, split.memberId !== undefined)
-        console.log(`  amount valid:`, !isNaN(parseFloat(split.amount.toFixed(2))))
-      })
-
       const requests = calculatedSplits
-        .filter(split => {
-          const isValid = split.memberId !== undefined && !isNaN(parseFloat(split.amount.toFixed(2)))
-          if (!isValid) {
-            console.log(`Filtered out split:`, split)
-          }
-          return isValid
-        })
+        .filter(split => !isNaN(split.amount) && split.amount > 0)
         .map(split => ({
           bill_id: parseInt(params.billID),
           user_id: split.memberId,
           amount: parseFloat(split.amount.toFixed(2))
         }))
 
-      console.log('Requests to be sent:', requests) // Debug log
-
       if (requests.length === 0) {
         throw new Error('No valid splits to send')
       }
 
-      console.log('Sending requests to API...') // Debug log
-      const responses = await Promise.all(requests.map(request => {
-        console.log('Sending request:', {
-          url: '/bills/bill-splits/',
-          method: 'POST',
-          data: request,
-          headers: axiosInstance.defaults.headers
-        })
-        return axiosInstance.post('/bills/bill-splits/', request)
-      }))
-
-      console.log('API responses:', responses.map(r => ({
-        status: r.status,
-        statusText: r.statusText,
-        data: r.data
-      }))) // Debug log
+      await Promise.all(requests.map(request => axiosInstance.post('/bills/bill-splits/', request)))
 
       toast({
         title: "Success",
@@ -188,11 +132,10 @@ export default function BillSplitterPage({ params }: { params: { tribeID: string
       router.push(`/tribe/${params.tribeID}/leader-manage-bills`)
     } catch (error: unknown) {
       console.error('Error saving bill splits:', error)
-      
+
       if (axios.isAxiosError(error)) {
         console.error('Error response:', error.response?.data)
         console.error('Error status:', error.response?.status)
-        console.error('Request config:', error.config) // Log the full request config
         toast({
           title: "Error",
           description: error.response?.data?.detail || "Failed to save bill splits. Please check the console for more details.",
@@ -237,8 +180,8 @@ export default function BillSplitterPage({ params }: { params: { tribeID: string
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <Label>Split Method</Label>
-              <RadioGroup 
-                value={splitMethod} 
+              <RadioGroup
+                value={splitMethod}
                 onValueChange={(value: string) => setSplitMethod(value as SplitMethod)}
                 className="flex space-x-4 mt-2"
               >
