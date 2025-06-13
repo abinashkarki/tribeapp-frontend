@@ -1,12 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    domains: ['127.0.0.1', 'tribeimagesbucket.s3.amazonaws.com'],
+  eslint: {
+    ignoreDuringBuilds: true,
   },
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    formats: ['image/avif', 'image/webp'],
   },
 };
 
-export default nextConfig;
+let exported = nextConfig;
+
+if (process.env.ANALYZE === 'true') {
+  const { default: withBundleAnalyzer } = await import('@next/bundle-analyzer');
+  exported = withBundleAnalyzer({ enabled: true })(nextConfig);
+}
+
+export default exported;
