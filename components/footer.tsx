@@ -10,7 +10,7 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Image
-                src="/images/tribebills-logo.webp"
+                src="/marketing/images/tribebills-logo.webp"
                 width={32}
                 height={32}
                 alt="TribeBills Logo"

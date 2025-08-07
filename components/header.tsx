@@ -32,7 +32,7 @@ export function Header() {
     >
       <div className="container mx-auto px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <Image src="/images/tribebills-logo.webp" width={40} height={40} alt="TribeBills Logo" className="w-10 h-10" />
+          <Image src="/marketing/images/tribebills-logo.webp" width={40} height={40} alt="TribeBills Logo" className="w-10 h-10" />
           <span className="text-2xl font-bold text-white">TribeBills</span>
         </div>
 

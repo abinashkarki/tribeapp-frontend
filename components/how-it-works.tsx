@@ -13,7 +13,7 @@ const steps = [
       "Set up a group for your housemates, friends, or any shared expense scenario. Invite members using a unique tribe code and start your journey together.",
     color: "from-purple-600 to-pink-600",
     icon: <Users className="w-6 h-6" />,
-    imageSrc: "/images/tribal-gathering.webp",
+    imageSrc: "/marketing/images/tribal-gathering.webp",
     imageAlt: "Tribal gathering around a campfire representing creating your tribe",
   },
   {
@@ -23,7 +23,7 @@ const steps = [
       "Take a photo of your receipt and let Smart Scan technology automatically extract all the details. Then instantly split the bill among your tribe members - equally or by custom amounts.",
     color: "from-pink-600 to-orange-600",
     icon: <Camera className="w-6 h-6" />,
-    imageSrc: "/images/scan-and-split.webp",
+    imageSrc: "/marketing/images/scan-and-split.webp",
     imageAlt: "Person scanning a receipt with phone while tribe members gather around campfire",
   },
   {
@@ -33,7 +33,7 @@ const steps = [
       "Pay your share through your preferred payment method (outside the app), then record the settlement in TribeBills. Keep track of who's paid and maintain harmony in your tribe.",
     color: "from-orange-600 to-green-600",
     icon: <CheckCircle className="w-6 h-6" />,
-    imageSrc: "/images/settle-up.webp",
+    imageSrc: "/marketing/images/settle-up.webp",
     imageAlt: "Tribe members contributing coins to a shared pot representing settling up payments",
   },
 ]

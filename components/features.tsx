@@ -65,11 +65,11 @@ const features = [
 export function Features() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount: 0.2 })
-  const videoSrc = "/videos/takeapic-cropped.mp4"
+  const videoSrc = "/marketing/videos/takeapic-cropped.mp4"
 
   const videoSources = [
-    { src: "/videos/takeapic-cropped.webm", type: "video/webm" },
-    { src: "/videos/takeapic-cropped.mp4", type: "video/mp4" },
+    { src: "/marketing/videos/takeapic-cropped.webm", type: "video/webm" },
+    { src: "/marketing/videos/takeapic-cropped.mp4", type: "video/mp4" },
   ]
 
   return (

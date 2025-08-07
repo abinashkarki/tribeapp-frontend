@@ -10,11 +10,11 @@ export function Download() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount: 0.2 })
 
-  const videoSrc = "/videos/create-tribe-cropped.mp4"
+  const videoSrc = "/marketing/videos/create-tribe-cropped.mp4"
 
   const videoSources = [
-    { src: "/videos/create-tribe-cropped.webm", type: "video/webm" },
-    { src: "/videos/create-tribe-cropped.mp4", type: "video/mp4" },
+    { src: "/marketing/videos/create-tribe-cropped.webm", type: "video/webm" },
+    { src: "/marketing/videos/create-tribe-cropped.mp4", type: "video/mp4" },
   ]
 
   return (

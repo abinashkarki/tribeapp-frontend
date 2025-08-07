@@ -72,7 +72,7 @@ export function Hero() {
                   transition={{ duration: 0.8 }}
                 >
                   <Image
-                    src="/images/theme.webp"
+                    src="/marketing/images/theme.webp"
                     alt="TribeBills - Friends gathering around a campfire representing community and shared experiences"
                     fill
                     className="object-contain"
