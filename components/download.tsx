@@ -2,9 +2,9 @@
 
 import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { AppleIcon } from "@/components/ui/icons"
-import { AutoPlayVideo } from "@/components/ui/auto-play-video"
+import { Button } from "@/components/marketing-ui/button"
+import { AppleIcon } from "@/components/marketing-ui/icons"
+import { AutoPlayVideo } from "@/components/marketing-ui/auto-play-video"
 
 export function Download() {
   const ref = useRef(null)

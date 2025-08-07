@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { Mail, MapPin, Clock, MessageCircle, Phone } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/marketing-ui/button"
 
 const contactMethods = [
   {

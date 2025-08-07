@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/marketing-ui/button"
 import { Sun, Moon, Monitor } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 

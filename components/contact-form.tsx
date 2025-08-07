@@ -6,12 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { motion } from "framer-motion"
 import { Loader2, Send, Check } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useToast } from "@/components/ui/use-toast"
+import { Button } from "@/components/marketing-ui/button"
+import { Input } from "@/components/marketing-ui/input"
+import { Textarea } from "@/components/marketing-ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/marketing-ui/select"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/marketing-ui/form"
+import { useToast } from "@/components/marketing-ui/use-toast"
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),

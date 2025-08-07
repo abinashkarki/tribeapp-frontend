@@ -3,7 +3,7 @@
 import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
 import { Camera, DollarSign, BarChart3, RefreshCw, Users, Lock } from "lucide-react"
-import { AutoPlayVideo } from "@/components/ui/auto-play-video"
+import { AutoPlayVideo } from "@/components/marketing-ui/auto-play-video"
 
 const features = [
   {

@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { motion, useInView, AnimatePresence } from "framer-motion"
 import { ChevronRight, ChevronLeft, Star } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/marketing-ui/button"
 
 const testimonials = [
   {

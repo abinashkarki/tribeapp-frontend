@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Menu, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/marketing-ui/button"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { useTheme } from "next-themes"
 
