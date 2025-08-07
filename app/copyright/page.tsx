@@ -1,5 +1,23 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Copyright & Licenses | TribeBills",
+  description: "TribeBills copyright information, third-party licenses, and legal attributions for all software components and libraries used in our application.",
+  openGraph: {
+    title: "Copyright & Licenses | TribeBills",
+    description: "TribeBills copyright information and third-party licenses.",
+    url: '/copyright',
+  },
+  alternates: {
+    canonical: '/copyright',
+  },
+  robots: {
+    index: true,
+    follow: false, // Legal pages typically don't need deep crawling
+  },
+}
 
 export default function CopyrightAndLicenses() {
   return (

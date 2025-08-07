@@ -1,5 +1,19 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Terms of Service | TribeBills",
+  description: "Read TribeBills Terms of Service to understand your rights and responsibilities when using our bill splitting and expense management platform.",
+  openGraph: {
+    title: "Terms of Service | TribeBills",
+    description: "Read TribeBills Terms of Service to understand your rights and responsibilities.",
+    url: '/terms',
+  },
+  alternates: {
+    canonical: '/terms',
+  },
+}
 
 export default function TermsOfService() {
   return (

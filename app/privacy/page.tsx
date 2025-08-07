@@ -1,5 +1,19 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | TribeBills",
+  description: "Learn how TribeBills protects your privacy and handles your personal data. Our comprehensive privacy policy explains data collection, usage, and your rights.",
+  openGraph: {
+    title: "Privacy Policy | TribeBills",
+    description: "Learn how TribeBills protects your privacy and handles your personal data.",
+    url: '/privacy',
+  },
+  alternates: {
+    canonical: '/privacy',
+  },
+}
 
 export default function PrivacyPolicy() {
   return (
