@@ -48,24 +48,30 @@ export function ContactForm() {
   })
 
   const onSubmit = async (data: ContactFormData) => {
+    if (!process.env.NEXT_PUBLIC_CONTACT_FORM_ENABLED) {
+      toast({
+        title: "Contact form disabled",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      const formData = new FormData()
-      formData.append("access_key", "bb437560-b754-423f-a346-ee5ec2955036")
-      formData.append("name", data.name)
-      formData.append("email", data.email)
-      formData.append("subject", `TribeBills Contact: ${subjects.find(s => s.value === data.subject)?.label}`)
-      formData.append("message", data.message)
-      if (data.phone) formData.append("phone", data.phone)
-      
-      // Add some metadata
-      formData.append("from_name", "TribeBills Contact Form")
-      formData.append("replyto", data.email)
+      // Client-side rate limiting check (basic protection)
+      const lastSubmission = localStorage.getItem('lastContactSubmission')
+      if (lastSubmission && Date.now() - parseInt(lastSubmission) < 60000) {
+        throw new Error("Please wait before submitting again")
+      }
 
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("/api/contact", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       })
 
       const result = await response.json()
@@ -73,6 +79,7 @@ export function ContactForm() {
       if (result.success) {
         setIsSubmitted(true)
         form.reset()
+        localStorage.setItem('lastContactSubmission', Date.now().toString())
         toast({
           title: "Message sent successfully!",
           description: "We'll get back to you within 24 hours.",
@@ -84,7 +91,7 @@ export function ContactForm() {
       console.error("Form submission error:", error)
       toast({
         title: "Failed to send message",
-        description: "Please try again or contact us directly at karkiabinash777@gmail.com",
+        description: error instanceof Error ? error.message : "Please try again later.",
         variant: "destructive",
       })
     } finally {
