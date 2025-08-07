@@ -51,7 +51,7 @@ export function Navbar() {
         >
           <div className="w-10 h-10 bg-purple-600 dark:bg-purple-500 text-white rounded-lg flex items-center justify-center font-bold relative overflow-hidden group">
             <span className="relative z-10">TB</span>
-            <div className="absolute inset-0 bg-gradient-to-tr from-purple-600 to-purple-400 dark:from-purple-500 dark:to-purple-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-linear-to-tr from-purple-600 to-purple-400 dark:from-purple-500 dark:to-purple-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
           <span className="text-xl font-bold text-purple-600 dark:text-purple-400">TribeBills</span>
         </motion.div>

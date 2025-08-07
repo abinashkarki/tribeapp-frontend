@@ -97,9 +97,9 @@ export function Features() {
               {features.map((feature, index) => (
                 <motion.div
                   key={index}
-                  className={`p-6 rounded-2xl border backdrop-blur-sm transition-all duration-300 ${
+                  className={`p-6 rounded-2xl border backdrop-blur-xs transition-all duration-300 ${
                     feature.isHero
-                      ? `bg-gradient-to-br ${feature.gradient} border-transparent shadow-lg shadow-purple-500/25`
+                      ? `bg-linear-to-br ${feature.gradient} border-transparent shadow-lg shadow-purple-500/25`
                       : "bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700"
                   }`}
                   initial={{ opacity: 0, y: 20 }}
@@ -157,7 +157,7 @@ export function Features() {
                 animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1 }}
                 transition={{ duration: 0.6 }}
               >
-                <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-zinc-900 to-black">
+                <div className="relative w-full h-full rounded-2xl overflow-hidden bg-linear-to-br from-zinc-900 to-black">
                   {/* Video container with cropped bottom */}
                   <div className="relative overflow-hidden">
                     <AutoPlayVideo
@@ -166,16 +166,16 @@ export function Features() {
                     />
                   </div>
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent" />
                 </div>
               </motion.div>
 
               {/* Static glow effect */}
-              <div className="absolute -inset-10 rounded-full blur-3xl -z-10 bg-gradient-to-r from-purple-600/20 to-pink-600/20 opacity-20" />
+              <div className="absolute -inset-10 rounded-full blur-3xl -z-10 bg-linear-to-r from-purple-600/20 to-pink-600/20 opacity-20" />
 
               {/* Floating feature indicator for Smart Scan */}
               <motion.div
-                className="absolute -top-4 -right-4 bg-black/80 backdrop-blur-sm border border-white/20 rounded-lg p-3"
+                className="absolute -top-4 -right-4 bg-black/80 backdrop-blur-xs border border-white/20 rounded-lg p-3"
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
               >

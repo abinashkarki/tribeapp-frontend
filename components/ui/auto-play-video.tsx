@@ -10,7 +10,7 @@ interface AutoPlayVideoProps {
   sources: VideoSource[]
   poster?: string
   className?: string
-  aspectRatio?: string // e.g. 'aspect-video', 'aspect-[4/3]'
+  aspectRatio?: string // e.g. 'aspect-video', 'aspect-4/3'
 }
 
 export const AutoPlayVideo: React.FC<AutoPlayVideoProps> = ({

@@ -45,7 +45,7 @@ export function ContactUs() {
               animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-zinc-800/50 shadow-2xl">
+              <div className="bg-black/40 backdrop-blur-xs rounded-2xl p-8 md:p-12 border border-zinc-800/50 shadow-2xl">
                 <ContactForm />
               </div>
             </motion.div>
@@ -57,7 +57,7 @@ export function ContactUs() {
               animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 30 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-8 border border-zinc-800/50 shadow-2xl min-h-[200px] h-full">
+              <div className="bg-black/40 backdrop-blur-xs rounded-2xl p-8 border border-zinc-800/50 shadow-2xl min-h-[200px] h-full">
                 <ContactInfo />
               </div>
             </motion.div>

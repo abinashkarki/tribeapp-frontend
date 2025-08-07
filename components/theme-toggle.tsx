@@ -24,7 +24,7 @@ export function ThemeToggle() {
       <Button
         variant="outline"
         size="icon"
-        className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 shadow-lg hover:shadow-xl transition-all duration-300"
+        className="rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-xs border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 shadow-lg hover:shadow-xl transition-all duration-300"
         onClick={() => setIsOpen(!isOpen)}
       >
         {theme === "light" ? (

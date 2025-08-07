@@ -58,7 +58,7 @@ export function ContactInfo() {
       </div>
 
       {/* Quick Help Section */}
-      <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 rounded-xl p-6 border border-purple-500/20">
+      <div className="bg-linear-to-br from-purple-900/20 to-pink-900/20 rounded-xl p-6 border border-purple-500/20">
         <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <MessageCircle className="w-5 h-5" />
           Quick Help
@@ -71,7 +71,7 @@ export function ContactInfo() {
               className="block group"
             >
               <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 shrink-0"></div>
                 <div>
                   <h5 className="text-white font-medium text-sm group-hover:text-purple-300 transition-colors">
                     {item.title}

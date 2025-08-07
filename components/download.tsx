@@ -18,7 +18,7 @@ export function Download() {
   ]
 
   return (
-    <section className="py-20 bg-gradient-to-b from-black to-purple-950 relative overflow-hidden" ref={ref}>
+    <section className="py-20 bg-linear-to-b from-black to-purple-950 relative overflow-hidden" ref={ref}>
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.png')] bg-center opacity-10"></div>
@@ -58,7 +58,7 @@ export function Download() {
           >
             <div className="relative max-w-md mx-auto">
               {/* Video container with cropped bottom */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-gradient-to-br from-zinc-900 to-black">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-linear-to-br from-zinc-900 to-black">
                 <div className="relative overflow-hidden aspect-video">
                   <AutoPlayVideo
                     sources={videoSources}
@@ -67,11 +67,11 @@ export function Download() {
                 </div>
 
                 {/* Subtle overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
               </div>
 
               {/* Background glow effect */}
-              <div className="absolute -inset-10 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full blur-3xl -z-10" />
+              <div className="absolute -inset-10 bg-linear-to-r from-purple-600/20 to-pink-600/20 rounded-full blur-3xl -z-10" />
             </div>
           </motion.div>
         </div>

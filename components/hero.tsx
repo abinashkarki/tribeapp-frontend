@@ -17,8 +17,8 @@ export function Hero() {
     <section className="pt-32 pb-20 md:pt-40 md:pb-32 bg-black relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black"></div>
-        <div className="absolute inset-0 bg-[url('/grid.png')] bg-center [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black_75%)]"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-purple-900/20 via-black to-black"></div>
+        <div className="absolute inset-0 bg-[url('/grid.png')] bg-center mask-[radial-gradient(ellipse_at_center,transparent_20%,black_75%)]"></div>
       </div>
 
       <div className="container mx-auto px-4 xs:px-3 relative">
@@ -48,7 +48,7 @@ export function Hero() {
                 rel="noopener noreferrer"
                 className="inline-block"
               >
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 active:scale-95 text-white text-lg px-8 py-6 rounded-full flex items-center gap-2 group shadow-lg shadow-purple-500/25 transition-transform">
+                <Button className="bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 active:scale-95 text-white text-lg px-8 py-6 rounded-full flex items-center gap-2 group shadow-lg shadow-purple-500/25 transition-transform">
                   <span>Download Now</span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -66,7 +66,7 @@ export function Hero() {
               {/* Main image container */}
               <div className="relative">
                 <motion.div
-                  className="relative w-full aspect-[9/16] xs:aspect-[9/12] lg:h-[700px]"
+                  className="relative w-full aspect-9/16 xs:aspect-[9/12] lg:h-[700px]"
                   initial={{ opacity: 0, scale: 1.05 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.8 }}
@@ -83,7 +83,7 @@ export function Hero() {
               </div>
 
               {/* Background glow effect - more subtle */}
-              <div className="absolute -inset-20 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-full blur-3xl -z-10" />
+              <div className="absolute -inset-20 bg-linear-to-r from-orange-500/10 to-yellow-500/10 rounded-full blur-3xl -z-10" />
             </div>
           </motion.div>
         </div>

@@ -46,14 +46,14 @@ interface StepCardProps {
 
 const StepCard = ({ step, index, isInView }: StepCardProps) => {
   const cardVariants = {
-    primary: "border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-zinc-900/40",
-    secondary: "border-zinc-700/50 bg-gradient-to-br from-zinc-900/40 to-zinc-800/20"
+    primary: "border-purple-500/30 bg-linear-to-br from-purple-900/20 to-zinc-900/40",
+    secondary: "border-zinc-700/50 bg-linear-to-br from-zinc-900/40 to-zinc-800/20"
   }
 
   return (
     <motion.div
       className={`
-        relative backdrop-blur-sm rounded-3xl p-6 md:p-8 border
+        relative backdrop-blur-xs rounded-3xl p-6 md:p-8 border
         shadow-2xl hover:shadow-purple-500/10 transition-all duration-300
         group cursor-pointer
         ${index === 1 ? cardVariants.primary : cardVariants.secondary}
@@ -70,7 +70,7 @@ const StepCard = ({ step, index, isInView }: StepCardProps) => {
       <div className="flex items-center gap-4 mb-6">
         <motion.div 
           className={`
-            w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} 
+            w-16 h-16 rounded-2xl bg-linear-to-br ${step.color} 
             flex items-center justify-center shadow-lg
           `}
           whileHover={{ 
@@ -99,11 +99,11 @@ const StepCard = ({ step, index, isInView }: StepCardProps) => {
       {/* Image */}
       <div className="relative">
         {/* Glow effect */}
-        <div className={`absolute -inset-4 bg-gradient-to-r ${step.color} opacity-10 group-hover:opacity-20 rounded-full blur-3xl -z-10 transition-opacity duration-300`} />
+        <div className={`absolute -inset-4 bg-linear-to-r ${step.color} opacity-10 group-hover:opacity-20 rounded-full blur-3xl -z-10 transition-opacity duration-300`} />
         
         {/* Image flowing naturally in card */}
         <motion.div 
-          className="relative aspect-[4/3] -mx-6 md:-mx-8 -mb-6 md:-mb-8 mt-4"
+          className="relative aspect-4/3 -mx-6 md:-mx-8 -mb-6 md:-mb-8 mt-4"
           whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
@@ -120,7 +120,7 @@ const StepCard = ({ step, index, isInView }: StepCardProps) => {
       {/* Progress indicator */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
         <motion.div 
-          className={`w-12 h-1 rounded-full bg-gradient-to-r ${step.color} shadow-lg`}
+          className={`w-12 h-1 rounded-full bg-linear-to-r ${step.color} shadow-lg`}
           initial={{ scaleX: 0 }}
           animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
           transition={{ duration: 0.8, delay: index * 0.2 + 0.4 }}

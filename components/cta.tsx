@@ -11,7 +11,7 @@ export function Cta() {
 
   return (
     <section
-      className="py-20 bg-gradient-to-r from-purple-700 to-purple-900 dark:from-purple-900 dark:to-purple-800 text-white relative overflow-hidden"
+      className="py-20 bg-linear-to-r from-purple-700 to-purple-900 dark:from-purple-900 dark:to-purple-800 text-white relative overflow-hidden"
       ref={ref}
     >
       {/* Background Elements */}
@@ -83,7 +83,7 @@ export function Cta() {
             <div className="relative h-[500px] max-w-xs mx-auto">
               {/* Central App Concept */}
               <motion.div
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-40 bg-gradient-to-br from-purple-600 to-pink-600 rounded-3xl shadow-2xl flex flex-col items-center justify-center z-20"
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-40 bg-linear-to-br from-purple-600 to-pink-600 rounded-3xl shadow-2xl flex flex-col items-center justify-center z-20"
                 animate={{
                   y: [0, -10, 0],
                   rotate: [0, 2, 0],
@@ -166,7 +166,7 @@ export function Cta() {
               ].map((line, index) => (
                 <motion.div
                   key={index}
-                  className="absolute w-px h-20 bg-gradient-to-b from-purple-400 to-transparent"
+                  className="absolute w-px h-20 bg-linear-to-b from-purple-400 to-transparent"
                   style={{
                     top: "50%",
                     left: "50%",

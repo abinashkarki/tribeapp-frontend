@@ -70,7 +70,7 @@ function FaqItem({ faq, index, isOpen, toggleOpen }: FaqItemProps) {
         <h3 className="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors pr-4">
           {faq.question}
         </h3>
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <div className="w-8 h-8 rounded-full bg-zinc-800 group-hover:bg-purple-600 transition-colors flex items-center justify-center">
             {isOpen ? <ChevronUp className="w-4 h-4 text-white" /> : <ChevronDown className="w-4 h-4 text-white" />}
           </div>
